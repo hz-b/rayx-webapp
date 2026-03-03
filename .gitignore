@@ -15,6 +15,7 @@ build/
 
 resources/
 output/
+results/
 uploads/
 
 .ipynb_checkpoints/

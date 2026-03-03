@@ -1,18 +1,21 @@
 # region Imports
-from flask import Flask, render_template, request, send_file, redirect, flash, url_for
+from flask import Flask, render_template, request, send_file, redirect, flash, url_for, jsonify
 from FileOperations import *
-import rayx, os, subprocess, traceback, io, base64, time
+import rayx, os, subprocess, traceback, io, base64, time, uuid, json
 from Histogram import Histogram
 import pandas as pd
 import numpy as np
 from werkzeug.utils import secure_filename
 # endregion
 
+# region Globals
 app = Flask(__name__)
 
 # Upload- & Output folder, creates one if it doesn't exist
 UPLOAD_FOLDER = "./uploads/"
+RESULT_FOLDER = "./results/"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(RESULT_FOLDER, exist_ok=True)
 
 output_file_name = ""
 
@@ -21,10 +24,72 @@ app.config["MAX_CONTENT_LENGTH"] = 10 * 1000 * 1000     # Limits rml_file size t
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {"rml"}
 
+# endregion
+
 # Runs the app and starts the server
 @app.route("/",)
 def index():
     return render_template("displayPy.html")
+
+# region SLURM
+# Handles the the job request
+@app.route("/submit_job", methods=["POST"])
+def submit_job():
+    if "rmlFile" not in request.files:
+        return redirect(request.url)
+    
+    file = request.files["rmlFile"]
+
+    # If the user does not select a file, the browser submits an
+    # empty file without a filename. User is redirected to the home page
+    if file.filename == '':
+        return render_template("displayPy.html")
+    
+    # Check if file is allowed and save it, if it is
+    if file and allowed_file(file.filename):
+        job_uuid = str(uuid.uuid4())
+
+        rml_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        result_file = os.path.join(RESULT_FOLDER, job_uuid + ".json")
+
+        # submit to Slurm; $1 = RML File, $2 = Result File
+        out = subprocess.check_output([
+            "sbatch",
+            "single_run_job.sh",
+            rml_path,
+            result_file
+        ], text=True)
+
+        # extract job id from sbatch output
+        slurm_id = out.strip().split()[-1]
+
+        return jsonify({"job_uuid": job_uuid, "slurm_id": slurm_id})
+
+# Check Job Slurm Status
+@app.route("/status/<slurm_id>")
+def check_status(slurm_id):
+    result = subprocess.run(["squeue", "-h", "-j", slurm_id], capture_output=True, text=True)
+    if result.stdout.strip() == "":
+        return jsonify({"status": "finished"})
+    return jsonify({"status": "running"})
+
+# Get Job Result
+@app.route("/result/<job_uuid>")
+def get_result(job_uuid):
+    path = os.path.join(RESULT_PATH, f"{job_uuid}.json")
+    if not os.path.exists(path):
+        return jsonify({"error":"not ready"}), 404
+
+    with open(path) as f:
+        data = json.load(f)
+    return jsonify(data)
+# endregion
+
+"""
+================================================================================
+                                REFACTOR THE BELOW
+================================================================================
+"""
 
 # Handles the post on the server, displays the content of the rml file on the site
 @app.route("/display/handle_post", methods=["POST"])
