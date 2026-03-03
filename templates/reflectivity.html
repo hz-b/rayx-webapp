@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block main %}
+        <div class = "FormContainer">
+            <h2>Reflectivity</h2>
+            <form action="{{url_for('display_handle_post')}}" method="POST" enctype="multipart/form-data">
+                <input type="file" id="rmlFile" name="rmlFile" accept=".rml"> 
+                <button type="submit">Send</button>
+            </form>
+        </div>
+        {% block received %}
+        {% endblock %}
+        <hr>
+        <h2 style=
+            "margin-top: 3rem;"
+        >{{ RMLFileName }}</h2>
+        <div class="PlotsContainer">
+        </div>
+{% endblock %}
