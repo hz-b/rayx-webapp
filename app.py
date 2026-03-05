@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, send_file, redirect, flash, u
 from FileOperations import *
 import rayx, os, subprocess, traceback, io, base64, time
 from Histogram import Histogram
+from Curve import Curve
 import pandas as pd
 import numpy as np
 from werkzeug.utils import secure_filename
@@ -115,6 +116,111 @@ def display_handle_post():
         plot_data=plot_data,
     )
 
+# TODO: Refactor this function, it is almost identical to the one above, only difference is the template that is rendered at the end
+@app.route("/reflectivity/handle_post", methods=["POST"])
+def handle_post_reflectivity():
+    """
+    Receives one **rml file** with **two elements**: A point source that emits **x-amount of rays**, and a mirror.<br>
+    The function takes the rml file and copies it x-times so that the **Photon Energy (eV) ranges from 0 to 1000 eV**.<br>
+    Then for each beamline, the function traces it and then calculates the **electric field** strength for the source and the mirror. 
+    It calculates the reflectivity by **dividing the electric field strength of the mirror by that of the source** and plots 
+    them in a curve.<br> 
+    The x-axis is the photon energy (eV) and the y-axis is the reflectivity.<br> 
+    The curve is then plotted on the website. 
+    """
+
+    # TODO: identical to the one in display_handle_post, only difference is the template that is rendered at the end
+    # ==============================
+    if request.method == "POST":
+        
+        # Check if the post request has the file part
+        if "rmlFile" not in request.files:
+            return redirect(request.url)
+
+        rml_file = request.files["rmlFile"]
+
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename. User is redirected to the home page
+        if rml_file.filename == '':
+            return render_template("displayPy.html")
+        
+        # Check if file is allowed and save it, if it is
+        if rml_file and allowed_file(rml_file.filename):
+            filename = secure_filename(rml_file.filename)
+            rml_file.filename = filename
+            save_file(UPLOAD_FOLDER, rml_file)
+
+        output_file_name = rml_file.filename
+        
+        try:
+            # Trace beamline    
+            beamline = get_beamline(rml_file)
+            traced_beamline = beamline.trace()
+
+            # Create pandas dataframe
+            columns = [
+                "direction_x", "direction_y", "direction_z",
+                "electric_field_x", "electric_field_y", "electric_field_z",
+                "energy", "event_type",
+                "last_element_id", "order", "path_length",
+                "position_x", "position_y", "position_z",
+                "ray_id", "source_id",
+            ]
+
+            df = pd.DataFrame({col: getattr(traced_beamline, col) for col in columns})
+
+            # Remove file from server
+            remove_file(UPLOAD_FOLDER, rml_file)
+
+            # =====================
+            # identical until here
+
+            # Plot the traced beamline
+            last_element = df["last_element_id"]
+
+            # Array to hold the electric field strength (eV) for each element, used to plot the reflectivity curve
+            electric_fields = []
+
+            
+            # TODO: Put Below in an for each loop for every rml. This needs to happen to each rml
+            electric_field_source = 0
+            electric_field_mirror = 0
+            
+            # Get the electric field strength for the source
+            for source in range(len(beamline.sources)):
+                mask = last_element == source
+                
+                electric_field_source = get_n_electric_field(df[mask])
+
+            # If the beamline has only one element or more than two, redirect to avoid errors
+            if len(beamline.elements) <= 1 or len(beamline.elements) > 2:
+                print("Beamline has only one element or more than two, redirecting to home page.")
+                redirect(url_for("index"))
+            else:
+                index = 1
+                try:
+                    # Get the electric field strength for the mirror
+                    for element in range(len(beamline.elements)):
+                        mask = last_element == element + len(beamline.sources)
+
+                        electric_field_mirror = get_n_electric_field(df[mask])
+                except:
+                    print("Index out of range" + str(index))
+                    pass
+            
+            # Calculate the reflectivity by dividing the electric field strength of the mirror by that of the source
+            reflectivity = electric_field_mirror / electric_field_source
+
+        except Exception as e:
+            traceback.print_exc()
+            return render_template("displayPy.html", exception=e)
+      
+    return render_template(
+        "displayPy.html", 
+        RMLFileName=get_cleaned_filename(output_file_name), 
+        plot_data=plot_data,
+    )
+
 # Returns a traced beamline using the RayX python package
 def get_beamline(rml_file) -> rayx.Rays:
 
@@ -134,6 +240,10 @@ def get_beamline(rml_file) -> rayx.Rays:
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Calculates the electric field strength from the electric field components
+def get_n_electric_field(df):
+    return np.sqrt(df["electric_field_x"]**2 + df["electric_field_y"]**2 + df["electric_field_z"]**2)
 
 # Runs the server
 if __name__ == "__main__":
