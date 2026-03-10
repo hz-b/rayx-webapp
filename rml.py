@@ -1,7 +1,9 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-def generate_energy_rmls(template_path, output_dir, min_e=0, max_e=100):
+def generate_energy_rmls(template_path, output_dir, min_e=1, max_e=100):
+    """Generates RML files for a range of photon energies based on a template RML file."""
+
 
     template_path = Path(template_path)
     output_dir = Path(output_dir) / "energy_scan"

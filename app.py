@@ -142,7 +142,7 @@ def handle_post_reflectivity():
         rml_file = request.files["rmlFile"]
 
         # If the user does not select a file, the browser submits an
-        # empty file without a filename. User is redirected to the home page
+        # empty file without a filename. User is redirected to the home page.
         if rml_file.filename == '':
             return render_template("displayPy.html")
         
@@ -162,6 +162,8 @@ def handle_post_reflectivity():
         electric_fields = pd.DataFrame(columns=columns)
         
         path_to_energy_scan = os.path.join(UPLOAD_FOLDER, "energy_scan/")
+
+        plot_data = ""
 
         # Loop through the generated rml files
         for rml in os.listdir(path_to_energy_scan):
@@ -269,7 +271,12 @@ def allowed_file(filename):
 
 # Calculates the electric field strength from the electric field components
 def get_n_electric_field(df):
-    return np.sqrt(df["electric_field_x"]**2 + df["electric_field_y"]**2 + df["electric_field_z"]**2)
+    magnitudes = np.sqrt(
+        df["electric_field_x"]**2 + 
+        df["electric_field_y"]**2 + 
+        df["electric_field_z"]**2
+    )
+    return magnitudes.sum()
 
 # Runs the server
 if __name__ == "__main__":
