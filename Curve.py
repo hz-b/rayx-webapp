@@ -35,7 +35,7 @@ class Curve:
             go.Scatter(
                 x=self.curveDataX,
                 y=self.curveDataY,
-                mode="lines+markers",
+                mode="lines",
                 name="Reflectivity"
             )
         )
