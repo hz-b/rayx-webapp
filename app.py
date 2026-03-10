@@ -135,6 +135,7 @@ def handle_post_reflectivity():
     # ==============================
     if request.method == "POST":
         
+        #region File Handling
         # Check if the post request has the file part
         if "rmlFile" not in request.files:
             return redirect(request.url)
@@ -154,6 +155,7 @@ def handle_post_reflectivity():
             rml_file.save(path)
 
             generate_energy_rmls(path, UPLOAD_FOLDER)
+        # endregion
 
         output_file_name = rml_file.filename
 
@@ -165,6 +167,7 @@ def handle_post_reflectivity():
 
         plot_data = ""
 
+        # region RML-File Loop
         # Loop through the generated rml files
         for rml in os.listdir(path_to_energy_scan):
             
@@ -239,17 +242,30 @@ def handle_post_reflectivity():
             except Exception as e:
                 traceback.print_exc()
                 return render_template("displayPy.html", exception=e)
-      
-    electric_fields = electric_fields.sort_values("eV")  # ensure X axis is ordered
-    
-    # Plot the reflectivity curve
-    plot_data = Curve(
-        electric_fields["eV"], 
-        electric_fields["reflectivity"], 
-        xLabel="Energy (eV)", 
-        yLabel="Reflectivity", 
-        title="Reflectivity Curve"
-    ).GetPlotHTML()
+        # endregion
+
+    electric_fields = electric_fields.sort_values("eV")
+
+    # region Plotting & Cleanup
+    try:
+        # Construct the curve plot using the electric field strength and reflectivity data.
+        plot_data = Curve(
+            electric_fields["eV"],
+            electric_fields["reflectivity"],
+            xLabel="Energy (eV)",
+            yLabel="Reflectivity",
+            title="Reflectivity Curve"
+        ).GetPlotHTML()
+    except Exception as e:
+        # If plotting fails, print the error and return an empty plot.
+        traceback.print_exc()
+        plot_data = ""
+    finally:
+        # Always clean up (delete constructed rml-files), even if plotting failed
+        for rml in os.listdir(path_to_energy_scan):
+            os.remove(os.path.join(path_to_energy_scan, rml))
+        os.rmdir(path_to_energy_scan)  # remove the now-empty folder too
+    # endregion
 
     return render_template(
         "reflectivity.html", 
@@ -257,9 +273,10 @@ def handle_post_reflectivity():
         plot_data=plot_data,
     )
 
-# Returns a traced beamline using the RayX python package
 def get_beamline(rml_file) -> rayx.Rays:
-
+    """
+    Takes an RML file and returns a traced beamline using the RayX python package.
+    """
     try:
         # Get the absolute path
         base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -272,18 +289,34 @@ def get_beamline(rml_file) -> rayx.Rays:
         traceback.print_exc()
         return render_template("displayPy.html", exception=e)
 
-# Checks if the uploaded file is allowed
 def allowed_file(filename):
+    """
+    Checks if the uploaded file is allowed based on its extension.
+    """
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Calculates the electric field strength from the electric field components
+# TODO: Check out what happens if return returns return magnitudes.sum() or return magnitudes.mean() or return np.sqrt((magnitudes**2).mean())
 def get_n_electric_field(df):
-    magnitudes = np.sqrt(
-        df["electric_field_x"]**2 + 
-        df["electric_field_y"]**2 + 
-        df["electric_field_z"]**2
-    )
+    """
+    Calculates the electric field strength from the electric field components in the dataframe. 
+    It sums the magnitudes of the electric field components to get the total electric field strength.
+    """
+
+    if df.empty:
+        return 0
+
+    try:
+        # Calculate the electric field strength by summing the magnitudes of the electric field components
+        magnitudes = np.sqrt(
+            df["electric_field_x"]**2 + 
+            df["electric_field_y"]**2 + 
+            df["electric_field_z"]**2
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return 0
+    
     return magnitudes.sum()
 
 # Runs the server
