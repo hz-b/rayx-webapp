@@ -1,6 +1,7 @@
 #region Imports
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from HistogramData import HistogramData
 # endregion
 
@@ -24,11 +25,15 @@ class Curve:
 
     def GetPlotHTML(self) -> str:
         """
-        Returns interactive Plotly HTML for a curve plot.
+        Returns interactive Plotly HTML for a curve plot. For better debugging this class also plots a table of the data points.
         """
 
         # Create figure
-        fig = go.Figure()
+        fig = make_subplots(
+            rows=2, cols=1,
+            row_heights=[0.8, 0.2],  # main vs table
+            vertical_spacing=0.05
+        )
 
         # Add reflectivity curve
         fig.add_trace(
@@ -37,12 +42,20 @@ class Curve:
                 y=self.curveDataY,
                 mode="lines",
                 name="Reflectivity"
-            )
+            ), row=1, col=1
+        )
+
+        # Add data table
+        fig.add_trace(
+            go.Table(
+                header=dict(values=["Photon Energy", "Reflectivity"]),
+                cells=dict(values=[self.curveDataX, self.curveDataY])
+            ), row=2, col=1
         )
 
         # Layout
         fig.update_layout(
-            height=800,
+            autosize=True,
             width=800,
             title=self.title,
             xaxis_title=self.xlabel,
