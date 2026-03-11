@@ -252,7 +252,7 @@ def handle_post_reflectivity():
         plot_data = Curve(
             electric_fields["eV"],
             electric_fields["reflectivity"],
-            xLabel="Energy (eV)",
+            xLabel="Photon Energy (eV)",
             yLabel="Reflectivity",
             title="Reflectivity Curve"
         ).GetPlotHTML()
