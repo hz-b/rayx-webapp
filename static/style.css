@@ -185,7 +185,7 @@ form *{
 .ReflectivitySettingsContainer {
     border: solid 1px var(--primary-color);
     border-radius: 5px;
-    padding: 1rem;
+    padding: 0.3rem;
 }
 
 .Plot {
