@@ -1,12 +1,12 @@
 # region Imports
 from flask import Flask, render_template, request, send_file, redirect, flash, url_for, session
-from FileOperations import *
+from scripts.FileOperations import *
 from dotenv import load_dotenv
 import rayx, os, subprocess, traceback, io, base64, time
-from Histogram import Histogram
-from Curve import Curve
+from scripts.Histogram import Histogram
+from scripts.Curve import Curve
 from pathlib import Path
-from rml import *
+from scripts.rml import *
 import pandas as pd
 import numpy as np
 from werkzeug.utils import secure_filename
