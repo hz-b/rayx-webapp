@@ -14,9 +14,10 @@
                 <form action="{{url_for('display_handle_post')}}" method="POST" enctype="multipart/form-data">
                     <label for="rmlFile" class="fileUpload">Upload RML File</label>
                     <input type="file" id="rmlFile" name="rmlFile" accept=".rml"> 
-                    <button type="submit">Send</button>
+                    <button type="submit" onclick="showLoadingIndicator()">Send</button>
                 </form>
             </div>
+            <div class="loader" id="loader" style="display: none;"></div>
             {% block received %}
             {% endblock %}
             <hr>
@@ -41,4 +42,12 @@
                 {% endfor %}
             </div>
         </div>
+        <script>
+            loader = document.getElementById("loader");
+            function showLoadingIndicator(){
+                if (loader.style.display === "none") {
+                    loader.style.display = "block";
+                }
+            }
+        </script>
 {% endblock %}

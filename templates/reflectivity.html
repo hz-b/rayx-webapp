@@ -31,10 +31,10 @@
                         <input type="number" id="roughness" value="{{roughness or 1}}" name="roughness" min="0" max="100">
                     </div>
                 </details>
-                <button type="submit">Send</button>
+                <button type="submit" id="submitButton" onclick="showLoadingIndicator()">Send</button>
             </form>
-            <div class="loader"></div>
         </div>
+        <div class="loader" id="loader" style="display: none;"></div>
         {% block received %}
         {% endblock %}
         <hr>
@@ -57,6 +57,13 @@
                     return false;
                 }
                 return true;
+            }
+
+            loader = document.getElementById("loader");
+            function showLoadingIndicator(){
+                if (loader.style.display === "none") {
+                    loader.style.display = "block";
+                }
             }
         </script>
 {% endblock %}
