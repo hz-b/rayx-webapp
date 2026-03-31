@@ -168,10 +168,9 @@ def display_handle_post():
 def handle_post_reflectivity():
     """
     Receives one **rml file** with **two elements**: A point source that emits **x-amount of rays**, and a mirror.<br>
-    The function takes the rml file and copies it x-times so that the **Photon Energy (eV) ranges from 0 to 1000 eV**.<br>
+    The function takes the rml file, applies user settings and copies the file x-times so that the **Photon Energy (eV) ranges from 0 to 1000 eV**.<br>
     Then for each beamline, the function traces it and then calculates the **electric field** strength for the source and the mirror. 
-    It calculates the reflectivity by **dividing the electric field strength of the mirror by that of the source** and plots 
-    them in a curve.<br> 
+    It calculates the reflectivity by **dividing the electric field strength of the mirror by that of the source** and plots them in a curve.<br> 
     The x-axis is the photon energy (eV) and the y-axis is the reflectivity.<br> 
     The curve is then plotted on the website. 
     """
@@ -212,7 +211,7 @@ def handle_post_reflectivity():
         angle = int(request.form["angle"])
         material = request.form.get("material", type=str)
         
-        # Flag for unallowed materials
+        # Flag for illegal materials
         if material == "" or isMaterialAllowed(material) == False:
             return render_template("reflectivity.html")
         
@@ -233,7 +232,7 @@ def handle_post_reflectivity():
         }
 
         set_value_in_rml(path, "worldXdirection", direction)
-        set_value_in_rml(path, "grazingIncAngle", angle_rad)
+        set_value_in_rml(path, "grazingIncAngle", angle)
         set_value_in_rml(path, "elementSubstrate", material)
         set_value_in_rml(path, "densitySubstrate", density)
         set_value_in_rml(path, "roughnessSubstrate", roughness)
@@ -260,7 +259,7 @@ def handle_post_reflectivity():
             
             try:
                 # Trace beamline using RAYX depending on the index    
-                beamline = beamlines[beamlines.index(beamline)]
+                # beamline = beamlines[beamlines.index(beamline)]
                 traced_beamline = beamline.trace()
 
                 # Create a pandas dataframe for the traced beamline
@@ -288,21 +287,16 @@ def handle_post_reflectivity():
                     electric_field_source = get_n_electric_field(df[mask])
 
                 # TODO: Add a check to validate that the elements is a mirror
-
+                print(f"Sources: {len(beamline.sources)}, Elements: {len(beamline.elements)}")
+                for e in beamline.elements:
+                    print(f"  - {e.name}")
                 # If the beamline has only one element or more than two, redirect to avoid errors
-                if len(beamline.elements) <= 1 or len(beamline.elements) > 2:
-                    print("Beamline has only one element or more than two, redirecting to home page.")
-                    redirect(url_for("index"))
+                # ✅ Remove the >2 restriction, just ensure mirror exists
+                if len(beamline.elements) < 1:
+                    print("No elements in beamline")
                 else:
-                    index = 1
-                    try:
-                        # Get the electric field strength for the mirror
-                        mask = last_element == len(beamline.sources)
-
-                        electric_field_mirror = get_n_electric_field(df[mask])
-                    except:
-                        print("Index out of range" + str(index))
-                        pass
+                    mask = last_element == len(beamline.sources)  # first element after source = mirror
+                    electric_field_mirror = get_n_electric_field(df[mask])
                     
                 # Calculate the reflectivity by dividing the electric field strength of the mirror by that of the source
                 reflectivity = np.abs(electric_field_mirror / electric_field_source)
@@ -421,7 +415,12 @@ def get_n_electric_field(df):
     return magnitudes.mean() # Source: Claude, Formerly this was magnitudes.sum()
 
 def generate_energy_beamlines(template_path, min_e=30, max_e=1000) -> list:
-    """Generates diffrent beamlines for a range of photon energies based on a template RML file."""
+    """
+    Generates diffrent beamlines for a range of photon energies based on a template RML file.
+    Sets the energy of each source to the current energy.
+    Returns:
+        A list of beamline objects.
+    """
 
     # Check if min_e and max_e are valid
     if min_e >= max_e or max_e <= min_e:
@@ -432,10 +431,10 @@ def generate_energy_beamlines(template_path, min_e=30, max_e=1000) -> list:
     beamlines = []
 
     for energy in range(min_e, max_e + 1):
-
         bl = rayx.import_beamline(template_path)
         bl.sources[0].energy = energy
         beamlines.append(bl)
+
     return beamlines
 
 # endregion

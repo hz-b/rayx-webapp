@@ -69,7 +69,7 @@
    <param id="reflectivityPhase" enabled="T">172.278</param>
    <param id="elementSubstrate" enabled="T">Si</param>
    <param id="roughnessSubstrate" enabled="T">0</param>
-   <param id="densitySubstrate" auto="T" enabled="T">0</param>
+   <param id="densitySubstrate" auto="F" enabled="T">0</param>
    <param id="surfaceCoating" comment="Substrate only" enabled="T">0</param>
    <param id="coatingFile" absolute="" enabled="F"></param>
    <param id="numberLayer" enabled="F">2</param>

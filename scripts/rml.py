@@ -36,3 +36,26 @@ def set_value_in_rml(path, param_id, value):
 
     # save
     tree.write(path, encoding="UTF-8", xml_declaration=True)
+
+def print_value_in_rml(path, param_id):
+    """
+    Print the value of a parameter in an RML file.
+
+    Args:
+        path (Path): Path to the RML file.
+        param_id (str): ID of the parameter to print.
+
+    Raises:
+        RuntimeError: If the parameter is not found.
+    """
+    tree = ET.parse(path)
+    root = tree.getroot()
+
+    # find parameter
+    param = root.find(".//param[@id='" + param_id + "']")
+
+    if param is None:
+        raise RuntimeError(f"Parameter {param_id} not found")
+
+    # print value
+    print(param.text)
