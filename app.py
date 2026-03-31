@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, send_file, redirect, flash, url_for, session
 from scripts.FileOperations import *
 from dotenv import load_dotenv
-import rayx, os, subprocess, traceback, io, base64, time
+import rayx, os, subprocess, traceback, io, base64, time, math
 from scripts.Histogram import Histogram
 from scripts.Curve import Curve
 from pathlib import Path
@@ -39,6 +39,7 @@ MATERIALS = {
     "Hg": 13.55, "Tl": 11.85, "Pb": 11.34, "Bi": 9.78, "Po": 9.20, "At": 7.0, "Rn": 0.0097,
     "Fr": 1.87, "Ra": 5.5, "Ac": 10.07, "Th": 11.7, "Pa": 15.4, "U": 19.1
 }
+
 ALLOWED_EXTENSIONS = {"rml"}
 # endregion
 
@@ -223,7 +224,15 @@ def handle_post_reflectivity():
         
         roughness = int(request.form["roughness"])
 
-        set_value_in_rml(path, "grazingIncAngle", angle)
+        angle_rad = math.radians(angle)
+
+        direction = {
+            "x": math.sin(angle_rad),
+            "y": 0.0,
+            "z": math.cos(angle_rad),
+        }
+
+        set_value_in_rml(path, "worldYdirection", direction)
         set_value_in_rml(path, "elementSubstrate", material)
         set_value_in_rml(path, "densitySubstrate", density)
         set_value_in_rml(path, "roughnessSubstrate", roughness)
@@ -420,8 +429,6 @@ def generate_energy_beamlines(template_path, min_e=30, max_e=1000) -> list:
 # endregion
 
 def isMaterialAllowed(material) -> bool:
-    
-
     return material in MATERIALS
 
 # Runs the server
