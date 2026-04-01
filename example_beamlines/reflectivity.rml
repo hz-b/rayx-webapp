@@ -104,7 +104,7 @@
    <param id="worldPosition" enabled="F">
     <x>0.0000000000000000</x>
     <y>0.0000000000000000</y>
-    <z>1.0000000000000000</z>
+    <z>10.0000000000000000</z>
    </param>
    <param id="worldXdirection" enabled="F">
     <x>1.0000000000000000</x>
@@ -136,8 +136,8 @@
    <param id="distanceImagePlane" enabled="T">100</param>
    <param id="worldPosition" enabled="F">
     <x>0.0000000000000000</x>
-    <y>34.2020143325668684</y>
-    <z>193.9692620785908161</z>
+    <y>342</y>
+    <z>10933</z>
    </param>
    <param id="worldXdirection" enabled="F">
     <x>1.0000000000000000</x>
