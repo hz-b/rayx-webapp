@@ -19,6 +19,9 @@ app = Flask(__name__)
 UPLOAD_FOLDER = Path("./uploads/")
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 
+OUTPUT_PATH = Path("./output/")
+OUTPUT_PATH.mkdir(exist_ok=True)
+
 output_file_name = ""
 
 # region Configurations
@@ -406,17 +409,17 @@ def download_handle_post():
         
         # get_traced_beamline(rml_file)
         
-        call_rayx(UPLOAD_FOLDER + rml_file.filename)
+        call_rayx(str(UPLOAD_FOLDER) + "/" + rml_file.filename)
 
-        remove_file(UPLOAD_FOLDER, rml_file)    
+        remove_file(str(UPLOAD_FOLDER), rml_file)    
     
-    return send_file(OUTPUT_PATH + output_file_name, as_attachment=True, download_name=output_file_name, mimetype="application/octet-stream")
+    return send_file(str(OUTPUT_PATH) + "/" + output_file_name, as_attachment=True, download_name=output_file_name, mimetype="application/octet-stream")
 
 # Calls RayX as a subprocess and saves the output as a .h5 file in the output folder
 def call_rayx(rml_path) -> None:
 
-        rayx_cmd = ["./resources/rayx", "-i", rml_path]
-        rayx_cmd += ['-o', OUTPUT_PATH + output_file_name]
+        rayx_cmd = ["./rayx/rayx", "-i", rml_path]
+        rayx_cmd += ['-o', str(OUTPUT_PATH) + "/" + output_file_name]
 
         result = subprocess.run(rayx_cmd, capture_output=True, text=True)
         

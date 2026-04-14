@@ -110,6 +110,7 @@
         }
     }
 
+    /// Change form action to download and not display traced beamline
     function downloadTracedH5(){
         let form = document.getElementById("reflectivityForm");
         form.action = "{{url_for('download_handle_post')}}";
