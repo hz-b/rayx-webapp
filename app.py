@@ -198,6 +198,13 @@ def handle_post_reflectivity():
             session["last_rml_filename"] = filename
             path = os.path.join(UPLOAD_FOLDER, filename)
             rml_file.save(path)
+            session["last_rml_filename"] = filename # store filename to make it available for download
+            session["last_rml_path"] = str(path)
+        elif session.get("last_rml_filename"):
+            filename = session["last_rml_filename"]
+            path = session["last_rml_path"]
+        else:
+            return render_template("reflectivity.html")
         # endregion
 
         # region RML-File Handling
@@ -395,28 +402,34 @@ def handle_post_reflectivity():
 # endregion
 
 # Handles the post on the server, sends the output .h5 file to the client
-@app.route("/download/handle_post", methods=["POST"])
-def download_handle_post():
-    if request.method == "POST":
-        try:
-            rml_file = request.files["rmlFile"]
-            output_file_name = os.path.splitext(rml_file.filename)[0] + ".h5"
-            
-            save_file(UPLOAD_FOLDER, rml_file)
-        except Exception as e:
-            print("File missing or could not be read", e)
-            return render_template("reflectivity.html")
-        
-        # get_traced_beamline(rml_file)
-        
-        call_rayx(str(UPLOAD_FOLDER) + "/" + rml_file.filename)
+@app.route("/reflectivity/download", methods=["POST"])
+def download_h5():
+    # No file upload needed — uses session file
+    path = session.get("last_rml_path")
+    filename = session.get("last_rml_filename")
 
-        remove_file(str(UPLOAD_FOLDER), rml_file)    
-    
-    return send_file(str(OUTPUT_PATH) + "/" + output_file_name, as_attachment=True, download_name=output_file_name, mimetype="application/octet-stream")
+    if not path or not os.path.exists(path):
+        flash("No file uploaded yet — please trace a beamline first.")
+        return redirect(url_for("reflectivity"))
+
+    output_file_name = os.path.splitext(filename)[0] + ".h5"
+    output_path = str(OUTPUT_PATH) + "/" + output_file_name
+
+    try:
+        call_rayx(path, output_file_name)
+    except Exception as e:
+        traceback.print_exc()
+        return "RAY-X failed", 500
+
+    return send_file(
+        output_path,
+        as_attachment=True,
+        download_name=output_file_name,
+        mimetype="application/octet-stream"
+    )
 
 # Calls RayX as a subprocess and saves the output as a .h5 file in the output folder
-def call_rayx(rml_path) -> None:
+def call_rayx(rml_path, output_file_name) -> None:
 
         rayx_cmd = ["./rayx/rayx", "-i", rml_path]
         rayx_cmd += ['-o', str(OUTPUT_PATH) + "/" + output_file_name]
