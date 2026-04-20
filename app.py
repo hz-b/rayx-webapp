@@ -1,5 +1,5 @@
 # region Imports
-from flask import Flask, render_template, request, send_file, redirect, flash, url_for, session
+from flask import Flask, render_template, request, send_file, redirect, flash, url_for, session, json
 from scripts.FileOperations import *
 from dotenv import load_dotenv
 import rayx, os, subprocess, traceback, io, base64, time, math
@@ -11,6 +11,7 @@ from scripts.Materials import MATERIALS
 import pandas as pd
 import numpy as np
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import HTTPException
 # endregion
 
 app = Flask(__name__)
@@ -465,6 +466,22 @@ def generate_energy_beamlines(template_path, min_e=30, max_e=1000) -> list:
 
 def isMaterialAllowed(material) -> bool:
     return material in MATERIALS
+
+# region Error Handling
+@app.errorhandler(HTTPException)
+def handle_exception(e):
+    """Return JSON instead of HTML for HTTP errors."""
+    # start with the correct headers and status code from the error
+    response = e.get_response()
+    # replace the body with JSON
+    response.data = json.dumps({
+        "code": e.code,
+        "name": e.name,
+        "description": e.description,
+    })
+    response.content_type = "application/json"
+    return response
+# endregion
 
 # Runs the server
 if __name__ == "__main__":
