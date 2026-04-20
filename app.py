@@ -468,6 +468,9 @@ def isMaterialAllowed(material) -> bool:
     return material in MATERIALS
 
 # region Error Handling
+"""
+Below code handles any HTTP errors that occur during the execution of the app (mostly in production mode).
+"""
 @app.errorhandler(HTTPException)
 def handle_exception(e):
     """Return JSON instead of HTML for HTTP errors."""
