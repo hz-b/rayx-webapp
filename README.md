@@ -66,12 +66,15 @@ Use the **mouse wheel** to zoom in and out centered on the cursor position.<br>
 The marginal histograms and main 2D histogram stay synchronized while zooming and panning, allowing for intuitive exploration of the beam distribution.<br>
 Additionally, plotly allows you to easily download the plot.
 
-## Creating a Docker Container
+## Docker
+### Creating a Docker Container
 Requirements
 * either **Docker** or **Podman**
 * for better management also install **Docker Desktop** or **Podman Desktop**
 
-Run the following (this also works with Docker) to build the container:
+If you want to make changes to the workflow you have to edit the `Dockerfile` config in the root directory. 
+
+To build a container run the following (this also works with Docker):
 
 ``podman build . -t rayx-web-app``
 
@@ -80,3 +83,17 @@ Afterwards run the following to run the container on port 5000:
 ``podman run -it rayx-web-app:latest -p 5000:5000``
 
 You can change the ip-address or the port-number the web-app will run on inside the `Dockerfile`. 
+
+### Saving and running Docker-Files / Images
+
+To distribute the WebApp to another user or to test it on a different machine you need to build an image. To build one simply type:
+
+```podman save -o rayx-web-app.tar rayx-web-app```
+
+Next you can load the image on a different machine that has podman/docker installed:
+
+```podman load -i rayx-web-app.tar```
+
+Then run it with:
+
+```podman run -it rayx-web-app:latest -p 5000:5000```
