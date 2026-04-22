@@ -23,7 +23,39 @@ def set_value_in_rml(path, param_id, value):
         raise RuntimeError(f"Parameter {param_id} not found")
 
     # set value
-    param.text = str(value)
+    if isinstance(value, dict):
+        # Handle xyz direction vector
+        for axis in ("x", "y", "z"):
+            child = param.find(axis)
+            if child is None:
+                raise RuntimeError(f"Sub-element <{axis}> not found in param '{param_id}'")
+            child.text = f"{float(value[axis]):.16f}"
+    else:
+        # Handle scalar value
+        param.text = str(value)
 
     # save
     tree.write(path, encoding="UTF-8", xml_declaration=True)
+
+def print_value_in_rml(path, param_id):
+    """
+    Print the value of a parameter in an RML file.
+
+    Args:
+        path (Path): Path to the RML file.
+        param_id (str): ID of the parameter to print.
+
+    Raises:
+        RuntimeError: If the parameter is not found.
+    """
+    tree = ET.parse(path)
+    root = tree.getroot()
+
+    # find parameter
+    param = root.find(".//param[@id='" + param_id + "']")
+
+    if param is None:
+        raise RuntimeError(f"Parameter {param_id} not found")
+
+    # print value
+    print(param.text)

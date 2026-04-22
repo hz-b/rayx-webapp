@@ -3,7 +3,7 @@
  <version>1.15</version>
  <beamline>
   <object name="Point Source" type="Point Source">
-   <param id="numberRays" enabled="T">1</param>
+   <param id="numberRays" enabled="T">1000</param>
    <param id="sourceWidthDistribution" comment="gaussian (sigma)" enabled="T">1</param>
    <param id="sourceWidth" enabled="T">0</param>
    <param id="sourceHeightDistribution" comment="gaussian (sigma)" enabled="T">1</param>
@@ -69,7 +69,7 @@
    <param id="reflectivityPhase" enabled="T">172.278</param>
    <param id="elementSubstrate" enabled="T">Si</param>
    <param id="roughnessSubstrate" enabled="T">0</param>
-   <param id="densitySubstrate" auto="T" enabled="T">0</param>
+   <param id="densitySubstrate" auto="F" enabled="T">0</param>
    <param id="surfaceCoating" comment="Substrate only" enabled="T">0</param>
    <param id="coatingFile" absolute="" enabled="F"></param>
    <param id="numberLayer" enabled="F">2</param>
@@ -104,7 +104,7 @@
    <param id="worldPosition" enabled="F">
     <x>0.0000000000000000</x>
     <y>0.0000000000000000</y>
-    <z>100.0000000000000000</z>
+    <z>10.0000000000000000</z>
    </param>
    <param id="worldXdirection" enabled="F">
     <x>1.0000000000000000</x>
@@ -136,8 +136,8 @@
    <param id="distanceImagePlane" enabled="T">100</param>
    <param id="worldPosition" enabled="F">
     <x>0.0000000000000000</x>
-    <y>34.2020143325668684</y>
-    <z>193.9692620785908161</z>
+    <y>342</y>
+    <z>10933</z>
    </param>
    <param id="worldXdirection" enabled="F">
     <x>1.0000000000000000</x>
