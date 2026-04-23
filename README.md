@@ -46,7 +46,9 @@ This will:
 ### 3. Create a 'config.env' file
 The server uses sessions to temporarily store the users submitted rml-files. Therefore, you need to create a `config.env` file in the **root directory** containing the following content:
 
-``SECRET_KEY=some_secret_key``
+``SECRET_KEY="some_secret_key"``
+
+Without this file the server will not run properly. You can choose any string as the secret key, but it should be kept secret in production environments.
 
 ### 4. Running a local server
 
