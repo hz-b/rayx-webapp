@@ -27,7 +27,13 @@ h3 {
 }
 
 details {
-    align-items: center;
+    width: 100%;
+}
+
+summary {
+    padding: 1rem;
+    border-bottom: var(--label-background-color) 1px solid;
+    cursor: pointer;
 }
 
 input{

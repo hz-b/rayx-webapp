@@ -215,7 +215,7 @@ def handle_post_reflectivity():
         # region RML-File Handling
 
         # Change and store params depending on POST request
-        angle = int(request.form["angle"])
+        angle = float(request.form["angle"])
         material = request.form.get("material", type=str)
         
         # Flag for illegal materials
@@ -228,7 +228,7 @@ def handle_post_reflectivity():
         if density < 0:
             density = MATERIALS[material]
         
-        roughness = int(request.form["roughness"])
+        roughness = float(request.form["roughness"])
 
         angle_rad = math.radians(angle)
 

@@ -9,7 +9,9 @@
 </div>
 <div class="MainContent">
     <div class="FormContainer">
-        <button id="toggleBtn" onclick="toggleForm()">Hide Menu</button>
+        <details open>
+            <summary>Settings</summary>
+        <!--<button id="toggleBtn" onclick="toggleForm()">Hide Menu</button>-->
         <div class="FormContentContainer" id="FormContentContainer">
             <div class="DescriptionContainer">
                 <p>Upload an RML file to be traced by RayX</p>
@@ -44,7 +46,7 @@
                                 <div class="settingContainer">
                                     <label for="angle">Angle (°):</label>
                                     <input type="number" id="angle" value="{{angle or 10}}" name="angle" min="-360"
-                                        max="360">
+                                        max="360" step="any">
                                 </div>
                                 <div class="settingContainer">
                                     <label for="material">Material:</label>
@@ -53,27 +55,27 @@
                                 <div class="settingContainer">
                                     <label for="density">Density (g/cm³):</label>
                                     <input type="number" id="density" value="{{density or -1}}" name="density" min="-1"
-                                        max="100" title="-1 for default density">
+                                        max="100" step="any" title="-1 for default density">
                                 </div>
                                 <div class="settingContainer">
                                     <label for="linearPol_0">Linear Polarization 0:</label>
                                     <input type="number" id="linearPol_0" value="{{linearPol_0 or 0}}" name="linearPol_0"
-                                        min="-1" max="1">
+                                        min="-1" max="1" step="any">
                                 </div>
                                 <div class="settingContainer">
                                     <label for="linearPol_45">Linear Polarization 45:</label>
                                     <input type="number" id="linearPol_45" value="{{linearPol_45 or 0}}" name="linearPol_45"
-                                        min="-1" max="1">
+                                        min="-1" max="1" step="any">
                                 </div>
                                 <div class="settingContainer">
                                     <label for="circularPol">Circular Polarization:</label>
                                     <input type="number" id="circularPol" value="{{circularPol or 0}}" name="circularPol"
-                                        min="-1" max="1">
+                                        min="-1" max="1" step="any">
                                 </div>
                                 <div class="settingContainer">
                                     <label for="roughness">Roughness (nm):</label>
                                     <input type="number" id="roughness" value="{{roughness or 1}}" name="roughness" min="0"
-                                        max="100">
+                                        max="100" step="any">
                                 </div>
                             </div>
                         </div>
@@ -89,6 +91,7 @@
                     Download traced H5-File</button>
             </form>
         </div>
+        </details>
     </div>
     {% block received %}
     {% endblock %}
