@@ -26,7 +26,7 @@ The app allows users to upload an `.rml` file, trace the beamline using the RAYX
 - **NumPy** – numerical processing
 - **Jinja2** – templating
 
-## Getting started / Installation
+## Getting started / Installation & Setup
 
 ### 1. Clone the repository
 `git clone https://github.com/win-vid/rayx-webapp` <br>
@@ -43,12 +43,19 @@ This will:
 * Create a virtual environment
 * Install all dependencies defined by the project
 
-### 3. Running a local server
+### 3. Create a 'config.env' file
+The server uses sessions to temporarily store the users submitted rml-files. Therefore, you need to create a `config.env` file in the **root directory** containing the following content:
+
+``SECRET_KEY=some_secret_key``
+
+If no secret key is set the web-app will use a default key.
+
+### 4. Running a local server
 
 Run the following to make the web app run locally:
 `uv run python app.py`
 
-You can then access the web app by entering the following address into your web-browser:
+You can then access the web app by entering the following address into your web-browser: <br>
 `http://localhost:5000`
 
 ## Tracing beamlines
@@ -65,3 +72,35 @@ Use the **mouse wheel** to zoom in and out centered on the cursor position.<br>
 **Double-click** anywhere inside the plot to reset the view.<br> 
 The marginal histograms and main 2D histogram stay synchronized while zooming and panning, allowing for intuitive exploration of the beam distribution.<br>
 Additionally, plotly allows you to easily download the plot.
+
+## Docker
+### Creating a Docker Container
+Requirements
+* either <a href="https://www.docker.com/">**Docker**</a> or <a href="https://podman.io/">**Podman**</a>
+* for better management also install **Docker Desktop** or **Podman Desktop**
+
+If you want to make changes to the workflow you have to edit the `Dockerfile` config in the root directory. 
+
+To build a container run the following (this also works with Docker):
+
+``podman build . -t rayx-web-app``
+
+Afterwards run the following to run the container on port 5000:
+
+``podman run -it rayx-web-app:latest -p 5000:5000``
+
+You can change the ip-address or the port-number the web-app will run on inside the `Dockerfile`. 
+
+### Saving and running Docker-Files / Images
+
+To distribute the WebApp to another user or to test it on a different machine you need to build an image. To build one simply type:
+
+```podman save -o rayx-web-app.tar rayx-web-app```
+
+Next you can load the image on a different machine that has podman/docker installed:
+
+```podman load -i rayx-web-app.tar```
+
+Then run it with:
+
+```podman run -it rayx-web-app:latest -p 5000:5000```

@@ -16,5 +16,10 @@ build/
 resources/
 output/
 uploads/
+results/
 
 .ipynb_checkpoints/
+
+.idea/
+
+*.env

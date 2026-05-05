@@ -6,18 +6,25 @@
     <title>RAYX - Web App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='rayx-logo.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
+    <header>
+        <div class = "TitleContainer">
+            <h1>RAYX - Web App</h1>
+        </div>
+        <div class = "NavBar">
+            <a href="https://github.com/win-vid/rayx-webapp/wiki" target="_blank">How to use</a>
+            <a href="https://github.com/hz-b/rayx" target="blank">RAYX GitHub</a>
+            <a href="https://hz-b.github.io/rayx/latest/" target="_blank">RAYX Docs</a>
+        </div>
+    </header>
     <div class = "ExceptionContainer">
         <p>{{exception}} </p>
     </div>
-    <div class = "TitleContainer">
-        <h1>RAYX - Web App</h1>
-    </div>
-    <div class = "DescriptionContainer">
-        <p>Upload an RML file to be traced by RayX</p>
-    </div>
-    {% block main %}
-    {% endblock %}
+    <main>
+        {% block main %}
+        {% endblock %}
+    </main>
 </body>
 </html>
