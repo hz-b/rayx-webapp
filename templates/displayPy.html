@@ -4,11 +4,11 @@
         <div class="ToolNavBar">
             <a href="{{ url_for('index') }}" style="border-bottom: solid 3px var(--primary-color);">Upload RML</a>
             <a href="{{ url_for('reflectivity') }}">Reflectivity</a>
-            <a class="ToolNavBarButton">Beamline Builder</button>
+            <!-- <a class="ToolNavBarButton">Beamline Builder</button> -->
         </div>
         <div class="MainContent">
             <div class = "DescriptionContainer">
-                <p>Upload an RML file to be traced by RayX</p>
+                <p>Upload an RML file to be traced by RAYX</p>
             </div>
             <div class = "FormContainer">
                 <form action="{{url_for('display_handle_post')}}" method="POST" enctype="multipart/form-data">

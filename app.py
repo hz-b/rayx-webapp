@@ -26,30 +26,23 @@ OUTPUT_PATH.mkdir(exist_ok=True)
 output_file_name = ""
 
 # region Configurations
-load_dotenv("config.env")                               # Load environment variables, if does not exist, create one
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")      # Secret Key is used to secure the session and temporarily store user form data
-app.config["MAX_CONTENT_LENGTH"] = 10 * 1000 * 1000     # Limits rml_file size to 10 MB
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER             # Folder where rml files are stored during session
+try:
+    load_dotenv("config.env")                               # Load environment variables, if does not exist, create one
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")      # Secret Key is used to secure the session and temporarily store user form data
+except:
+    print("Could not load secret key. Will use default secret key. In order to configure the secret key, create a file called 'config.env' with the following content: SECRET_KEY=some_secret_key.")
+    app.config["SECRET_KEY"] = "1234567890"
 
-ALLOWED_EXTENSIONS = {"rml"}
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1000 * 1000         # Limits rml_file size to 10 MB
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER                 # Folder where rml files are stored during session
+
+ALLOWED_EXTENSIONS = {"rml"}                                # Only allows .rml files to be uploaded
 # endregion
 
 # Runs the app and starts the server
 @app.route("/",)
 def index():
     return render_template("displayPy.html")
-
-@app.route("/reflectivity")
-def reflectivity():
-    """
-    This function renders the web page for the "Reflectivity" tool.
-
-    The "Reflectivity" tool is used to visualize the reflectivity of a material at a given angle and energy range.
-
-    Returns:
-        render_template: The rendered web page.
-    """
-    return render_template("reflectivity.html")
 
 # region Standard Beamline Tracing
 # Handles the post on the server, displays the content of the rml file on the site
@@ -157,6 +150,18 @@ def display_handle_post():
 # endregion
 
 # region Reflectivity
+
+@app.route("/reflectivity")
+def reflectivity():
+    """
+    This function renders the web page for the "Reflectivity" tool.
+
+    The "Reflectivity" tool is used to visualize the reflectivity of a material at a given angle and energy range.
+
+    Returns:
+        render_template: The rendered web page.
+    """
+    return render_template("reflectivity.html")
 
 # TODO: Refactor this function, it is almost identical to the one above, only difference is the template that is rendered at the end
 @app.route("/reflectivity/handle_post", methods=["POST"])
@@ -312,9 +317,14 @@ def handle_post_reflectivity():
 
 
                 # TODO: Add a check to validate that the elements is a mirror
+
+                # Debugging
+                """
                 print(f"Sources: {len(beamline.sources)}, Elements: {len(beamline.elements)}")
                 for e in beamline.elements:
                     print(f"  - {e.name}")
+                """
+                
                 # If the beamline has only one element or more than two, redirect to avoid errors
                 if len(beamline.elements) < 1:
                     print("No elements in beamline")
@@ -347,6 +357,7 @@ def handle_post_reflectivity():
                 # endregion
 
                 # region Reflectivity Debugging
+                """
                 mask_source = last_element == 0
                 mask_mirror = last_element == len(beamline.sources)
 
@@ -355,7 +366,7 @@ def handle_post_reflectivity():
                     f"mirror_rays={mask_mirror.sum()} | "
                     f"ratio={mask_mirror.sum()/mask_source.sum():.3f} | "
                     f"reflectivity={reflectivity:.4f}")
-
+                """
                 # endregion
 
             except Exception as e:

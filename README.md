@@ -48,6 +48,8 @@ The server uses sessions to temporarily store the users submitted rml-files. The
 
 ``SECRET_KEY=some_secret_key``
 
+If no secret key is set the web-app will use a default key.
+
 ### 4. Running a local server
 
 Run the following to make the web app run locally:

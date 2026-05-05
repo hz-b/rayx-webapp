@@ -107,6 +107,7 @@ main{
     border-bottom-left-radius: 0px;
     text-decoration: none;
     padding: 0.5rem;
+    transition: box-shadow 0.2s ease-in-out;
 }
 
 .ToolNavBar a:hover{
