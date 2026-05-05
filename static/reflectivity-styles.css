@@ -40,6 +40,8 @@ input{
     width: 5rem;
 }
 
+/* IDs */
+
 #toggleBtn {
     text-align: start;
     width: 100%;
@@ -63,6 +65,7 @@ input{
 }
 
 /* CONTAINERS */
+
 .FormContainer {
     margin: .5rem;
     min-width: 38rem;
@@ -174,6 +177,8 @@ input[type="text"]:focus {
 #downloadButton:hover {
     cursor: pointer;
 }
+
+/* MEDIA QUERIES */
 
 @media only screen and (max-width: 1830px) {
     .MainContent {

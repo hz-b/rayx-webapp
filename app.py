@@ -17,6 +17,8 @@ from werkzeug.exceptions import HTTPException
 app = Flask(__name__)
 
 # Upload- & Output folder, creates one if it doesn't exist
+# Used to store rml upload and h5 output
+# TODO: Implement user specific folder via Slurm & delete after session termination
 UPLOAD_FOLDER = Path("./uploads/")
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 
@@ -39,7 +41,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER                 # Folder where rml f
 ALLOWED_EXTENSIONS = {"rml"}                                # Only allows .rml files to be uploaded
 # endregion
 
-# Runs the app and starts the server
+# Runs the app and starts the server, loads landing page
 @app.route("/",)
 def index():
     return render_template("displayPy.html")
@@ -60,10 +62,9 @@ def display_handle_post():
     
     plot_data = []
 
-    t = time.time()
-
     if request.method == "POST":
         
+        # region POST Handling
         # Check if the post request has the file part
         if "rmlFile" not in request.files:
             return redirect(request.url)
@@ -71,7 +72,7 @@ def display_handle_post():
         rml_file = request.files["rmlFile"]
 
         # If the user does not select a file, the browser submits an
-        # empty file without a filename. User is redirected to the home page
+        # empty file without a filename. Page reloads, no file is uploaded.
         if rml_file.filename == '':
             return render_template("displayPy.html")
         
@@ -84,8 +85,12 @@ def display_handle_post():
             session["last_rml_filename"] = filename
             path = os.path.join(UPLOAD_FOLDER, filename)
             session["last_rml_path"] = path
+        else:
+            return render_template("displayPy.html")
 
         output_file_name = rml_file.filename
+
+        # endregion
         
         try:
             # Trace beamline
@@ -105,7 +110,9 @@ def display_handle_post():
             df = pd.DataFrame({col: getattr(traced_beamline, col) for col in columns})
 
             # Remove file from server
-            #remove_file(UPLOAD_FOLDER, rml_file)
+            # File can't be removed because rayx needs it to build the h5 file
+            # TODO: Find a way to remove the file after session termination
+            # remove_file(UPLOAD_FOLDER, rml_file)
 
             # Plot the traced beamline
             last_element = df["last_element_id"]
@@ -163,7 +170,6 @@ def reflectivity():
     """
     return render_template("reflectivity.html")
 
-# TODO: Refactor this function, it is almost identical to the one above, only difference is the template that is rendered at the end
 @app.route("/reflectivity/handle_post", methods=["POST"])
 def handle_post_reflectivity():
     """
