@@ -173,8 +173,8 @@ def reflectivity():
 @app.route("/reflectivity/handle_post", methods=["POST"])
 def handle_post_reflectivity():
     """
-    Receives one **rml file** with **two elements**: A point source that emits **x-amount of rays**, and a mirror.<br>
-    The function takes the rml file, applies user settings and copies the file x-times so that the **Photon Energy (eV) ranges from 0 to 1000 eV**.<br>
+    Takes one **rml file** with **two elements**: A point source that emits *1 ray**, and a mirror.<br>
+    The function takes the rml file, applies user settings generates a beamline x-times so that the **Photon Energy (eV) ranges from 0 to 1000 eV**.<br>
     Then for each beamline, the function traces it and then calculates the **electric field** strength for the source and the mirror. 
     It calculates the reflectivity by **dividing the electric field strength of the mirror by that of the source** and plots them in a curve.<br> 
     The x-axis is the photon energy (eV) and the y-axis is the reflectivity.<br> 
@@ -191,14 +191,17 @@ def handle_post_reflectivity():
         incoming_efields = []
         outgoing_efields = []
 
-        # region POST Handling
+        plot_data = ""
+    
+        # region RML-File Handling
+
+        # Get the absolute path of the rml-file
         path = "./example_beamlines/reflectivity.rml"
         filename = "reflectivity.rml"
+
+        # Save the file to the current session
         session["last_rml_filename"] = filename
         session["last_rml_path"] = path
-        # endregion
-
-        # region RML-File Handling
 
         # Change and store params depending on POST request
         angle = float(request.form["angle"])
@@ -216,6 +219,7 @@ def handle_post_reflectivity():
         
         roughness = float(request.form["roughness"])
 
+        # Convert angle to radians
         angle_rad = math.radians(angle)
 
         direction = {
@@ -224,6 +228,7 @@ def handle_post_reflectivity():
             "z": math.sin(angle_rad),
         }
 
+        # Get polarization values
         linearPol_0 = float(request.form["linearPol_0"])
         linearPol_45 = float(request.form["linearPol_45"])
         circularPol = float(request.form["circularPol"])
@@ -245,17 +250,12 @@ def handle_post_reflectivity():
         )
         # endregion
 
-        output_file_name = filename
-
         # Dataframe to hold the electric field strength (eV) for each element as well as the reflectivity used to plot the reflectivity curve
         columns = ["eV", "reflectivity"]
         electric_fields = pd.DataFrame(columns=columns)
 
-        # Variable to hold the plot data, will be passed to the template
-        plot_data = ""
-
         # region Beamline Tracing
-        # Loop through the generated rml file
+        # Loop through the generated beamlines and trace each
         for beamline in beamlines:
             
             try:
@@ -282,49 +282,36 @@ def handle_post_reflectivity():
                 electric_field_mirror = 0
 
                 # Get the electric field strength for the source
+                # Get Ein
                 for source in range(len(beamline.sources)):
                     mask = last_element == source
-
-                    electric_field_source = get_n_electric_field(df[mask])
-                    incoming_rays.append(electric_field_source * 1000)
-
-                    # Get the electric field strength for the mirror
-                    src_df = df[mask]
+                    Ein = get_electric_field_vector(df[mask])          # complex [Ex,Ey,Ez]
+                    electric_field_source = Ein
+                    incoming_rays.append(float(np.real(np.vdot(Ein, Ein))))
                     incoming_efields.append({
-                        "ex": float(np.abs(src_df["electric_field_x"].mean())),
-                        "ey": float(np.abs(src_df["electric_field_y"].mean())),
-                        "ez": float(np.abs(src_df["electric_field_z"].mean())),
+                        "ex": float(np.abs(Ein[0])),
+                        "ey": float(np.abs(Ein[1])),
+                        "ez": float(np.abs(Ein[2])),
                     })
 
-
-                # TODO: Add a check to validate that the elements is a mirror
-
-                # Debugging
-                """
-                print(f"Sources: {len(beamline.sources)}, Elements: {len(beamline.elements)}")
-                for e in beamline.elements:
-                    print(f"  - {e.name}")
-                """
-                
-                # If the beamline has only one element or more than two, redirect to avoid errors
+                # Get Eout
                 if len(beamline.elements) < 1:
                     print("No elements in beamline")
                 else:
-                    mask = last_element == len(beamline.sources)  # first element after source = mirror
-                    electric_field_mirror = get_n_electric_field(df[mask])
-                    outgoing.append(electric_field_mirror * 1000)
-
-                    mir_df = df[mask]
+                    mask = last_element == len(beamline.sources)
+                    Eout = get_electric_field_vector(df[mask])         # complex [Ex,Ey,Ez]
+                    electric_field_mirror = Eout
+                    outgoing.append(float(np.real(np.vdot(Eout, Eout))))
                     outgoing_efields.append({
-                        "ex": float(np.abs(mir_df["electric_field_x"].mean())),
-                        "ey": float(np.abs(mir_df["electric_field_y"].mean())),
-                        "ez": float(np.abs(mir_df["electric_field_z"].mean())),
+                        "ex": float(np.abs(Eout[0])),
+                        "ey": float(np.abs(Eout[1])),
+                        "ez": float(np.abs(Eout[2])),
                     })
-                    
-                # Calculate the reflectivity by dividing the electric field strength of the mirror by that of the source
-                print("Electic Field (V/m)")
-                print(electric_field_mirror, electric_field_source)
-                reflectivity = np.abs(electric_field_mirror / electric_field_source)
+
+                # Supervisor's formula
+                Ein_intensity = np.real(np.vdot(electric_field_source, electric_field_source))
+                Eout_intensity = np.real(np.vdot(electric_field_mirror, electric_field_mirror))
+                reflectivity = float(Eout_intensity / Ein_intensity) if Ein_intensity != 0 else 0.0
 
                 # Add the electric field strength and reflectivity to the dataframe
                 electric_fields = pd.concat(
@@ -377,15 +364,12 @@ def handle_post_reflectivity():
         # If plotting fails, print the error and return an empty plot.
         traceback.print_exc()
         plot_data = ""
-    finally:
-        # Always clean up (delete constructed rml-files), even if plotting failed
-        # TODO: Delete rml-file when connection gets terminated
-        pass
+
     # endregion
     
     return render_template(
         "reflectivity.html", 
-        RMLFileName=get_cleaned_filename(output_file_name), 
+        RMLFileName=None, 
         plot_data=plot_data,
         min_e=request.form.get("min_e", 30),
         max_e=request.form.get("max_e", 100),
@@ -467,32 +451,14 @@ def allowed_file(filename):
 
 # region Math
 # TODO: Check out what happens if return returns return magnitudes.sum() or return magnitudes.mean() or return np.sqrt((magnitudes**2).mean())
-def get_n_electric_field(df):
-    """
-    Calculates the total intensity from all rays in the dataframe.
-    Intensity per ray = |Ex|² + |Ey|² + |Ez|² (using conjugate for complex fields).
-    Returns a single scalar: the summed intensity across all rays.
-    """
+def get_electric_field_vector(df) -> np.ndarray:
     if df.empty:
-        return 0
-
-    try:
-        ex = df["electric_field_x"].values
-        ey = df["electric_field_y"].values
-        ez = df["electric_field_z"].values
-
-        # Per-ray intensity: real part of E · E* (handles complex fields)
-        per_ray_intensity = (
-            np.real(ex * np.conj(ex)) +
-            np.real(ey * np.conj(ey)) +
-            np.real(ez * np.conj(ez))
-        )
-
-        return float(np.sum(per_ray_intensity))
-
-    except Exception as e:
-        traceback.print_exc()
-        return 0
+        return np.zeros(3, dtype=complex)
+    return np.array([
+        df["electric_field_x"].values.mean(),
+        df["electric_field_y"].values.mean(),
+        df["electric_field_z"].values.mean(),
+    ])  # shape (3,), dtype complex
 
 def generate_energy_beamlines(template_path, min_e=30, max_e=1000) -> list:
     """
