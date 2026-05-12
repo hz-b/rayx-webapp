@@ -285,13 +285,15 @@ def handle_post_reflectivity():
                 # Get Ein
                 for source in range(len(beamline.sources)):
                     mask = last_element == source
-                    Ein = get_electric_field_vector(df[mask])          # complex [Ex,Ey,Ez]
+                    Ein = get_electric_field_vector(df[mask])          # Ein: complex [Ex,Ey,Ez]
+                    print("=" * 50)
+                    print("EIN: ", Ein)
                     electric_field_source = Ein
                     incoming_rays.append(float(np.real(np.vdot(Ein, Ein))))
                     incoming_efields.append({
-                        "ex": float(np.abs(Ein[0])),
-                        "ey": float(np.abs(Ein[1])),
-                        "ez": float(np.abs(Ein[2])),
+                        "ex": complex(Ein[0]),
+                        "ey": complex(Ein[1]),
+                        "ez": complex(Ein[2]),
                     })
 
                 # Get Eout
@@ -299,19 +301,21 @@ def handle_post_reflectivity():
                     print("No elements in beamline")
                 else:
                     mask = last_element == len(beamline.sources)
-                    Eout = get_electric_field_vector(df[mask])         # complex [Ex,Ey,Ez]
+                    Eout = get_electric_field_vector(df[mask])         # Eout: complex [Ex,Ey,Ez]
+                    print("EOUT: ", Eout)
                     electric_field_mirror = Eout
                     outgoing.append(float(np.real(np.vdot(Eout, Eout))))
                     outgoing_efields.append({
-                        "ex": float(np.abs(Eout[0])),
-                        "ey": float(np.abs(Eout[1])),
-                        "ez": float(np.abs(Eout[2])),
+                        "ex": complex(Eout[0]),
+                        "ey": complex(Eout[1]),
+                        "ez": complex(Eout[2]),
                     })
 
                 # Supervisor's formula
                 Ein_intensity = np.real(np.vdot(electric_field_source, electric_field_source))
                 Eout_intensity = np.real(np.vdot(electric_field_mirror, electric_field_mirror))
                 reflectivity = float(Eout_intensity / Ein_intensity) if Ein_intensity != 0 else 0.0
+                print("R:", Eout_intensity, "/" , Ein_intensity, "=", reflectivity)
 
                 # Add the electric field strength and reflectivity to the dataframe
                 electric_fields = pd.concat(

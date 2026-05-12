@@ -3,6 +3,7 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from scripts.HistogramData import HistogramData
+import base64
 # endregion
 
 
@@ -28,6 +29,20 @@ class Curve:
         self.title = title
 
         self.plot_html = self.GetPlotHTML()
+
+    @staticmethod
+    def fmt_complex(val):
+        """
+        Returns a string representation of a complex number.
+        """
+        
+        if isinstance(val, complex):
+            sign = "+" if val.imag >= 0 else ""
+            return f"{val.real:.5f}{sign}{val.imag:.5f}j"
+        try:
+            return f"{float(val):.5f}"
+        except (TypeError, ValueError):
+            return str(val)
 
     def GetPlotHTML(self) -> str:
         """
@@ -70,12 +85,12 @@ class Curve:
                 header=dict(values=["eV", "In Ex", "In Ey", "In Ez", "Out Ex", "Out Ey", "Out Ez"]),
                 cells=dict(values=[
                     self.curveDataX,
-                    [e.get("ex", float("nan")) for e in self.incoming_efields],
-                    [e.get("ey", float("nan")) for e in self.incoming_efields],
-                    [e.get("ez", float("nan")) for e in self.incoming_efields],
-                    [e.get("ex", float("nan")) for e in self.outgoing_efields],
-                    [e.get("ey", float("nan")) for e in self.outgoing_efields],
-                    [e.get("ez", float("nan")) for e in self.outgoing_efields],
+                    [self.fmt_complex(e.get("ex", float("nan"))) for e in self.incoming_efields],
+                    [self.fmt_complex(e.get("ey", float("nan"))) for e in self.incoming_efields],
+                    [self.fmt_complex(e.get("ez", float("nan"))) for e in self.incoming_efields],
+                    [self.fmt_complex(e.get("ex", float("nan"))) for e in self.outgoing_efields],
+                    [self.fmt_complex(e.get("ey", float("nan"))) for e in self.outgoing_efields],
+                    [self.fmt_complex(e.get("ez", float("nan"))) for e in self.outgoing_efields],
                 ])
             ), row=3, col=1
         )
@@ -96,8 +111,8 @@ class Curve:
             dragmode="pan"
         )
 
-        # Return HTML
-        return fig.to_html(
+        # construct HTML
+        plot_html = fig.to_html(
             full_html=False,
             include_plotlyjs="cdn",
             config={
@@ -106,3 +121,39 @@ class Curve:
                 "displaylogo": False
             }
         )
+
+        # region Debugging
+        # Build CSV content
+        rows = ["eV,In Ex,In Ey,In Ez,Out Ex,Out Ey,Out Ez"]
+        for i, eV in enumerate(self.curveDataX):
+            ie = self.incoming_efields[i] if i < len(self.incoming_efields) else {}
+            oe = self.outgoing_efields[i] if i < len(self.outgoing_efields) else {}
+            rows.append(",".join([
+                str(eV),
+                str(ie.get("ex", "")),
+                str(ie.get("ey", "")),
+                str(ie.get("ez", "")),
+                str(oe.get("ex", "")),
+                str(oe.get("ey", "")),
+                str(oe.get("ez", "")),
+            ]))
+        csv_content = "\n".join(rows)
+
+        # Inject download button
+        csv_bytes = csv_content.encode("utf-8")
+        csv_b64 = base64.b64encode(csv_bytes).decode("utf-8")
+
+        download_btn = f"""
+        <div class="DebuggerMenu" style="background-color: tomato;">
+        <h2>DEBUGGER MENU</h2>
+        <a href="data:text/csv;base64,{csv_b64}" download="efields.csv"
+        style="display:inline-block; margin: 10px; padding: 8px 16px; 
+                cursor: pointer; background:#eee; border:1px solid #ccc; 
+                text-decoration:none; color:black;">
+            Download E-field CSV
+        </a>
+        """
+        # endregion
+
+        # TODO: Remove download button if not debugging
+        return plot_html + download_btn
