@@ -1,4 +1,4 @@
-# Dictionary of allowed materials
+# Dictionary of allowed materials with their density
 
 MATERIALS = {
     "H": 0.0000899, "He": 0.0001785,

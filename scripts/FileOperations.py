@@ -1,6 +1,5 @@
 import os
 
-
 def remove_file(savePath, rml_file):
     """
     Removes a file from the server.
