@@ -30,8 +30,9 @@ output_file_name = ""
 # region Configurations
 try:
     load_dotenv("config.env")                               # Load environment variables, if does not exist, create one
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")      # Secret Key is used to secure the session and temporarily store user form data
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")      # Secret Key is used to secure the session and temporarily store user form data     TODO: Find out why this happens again
 except:
+    # TODO: Add correct excpetion handling
     print("Could not load secret key. Will use default secret key. In order to configure the secret key, create a file called 'config.env' with the following content: SECRET_KEY=some_secret_key.")
     app.config["SECRET_KEY"] = "1234567890"
 
@@ -454,7 +455,6 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # region Math
-# TODO: Check out what happens if return returns return magnitudes.sum() or return magnitudes.mean() or return np.sqrt((magnitudes**2).mean())
 def get_electric_field_vector(df) -> np.ndarray:
     if df.empty:
         return np.zeros(3, dtype=complex)
