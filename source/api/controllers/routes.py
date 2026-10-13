@@ -1,50 +1,13 @@
-# region Imports
 from flask import Flask, render_template, request, send_file, redirect, flash, url_for, session, json
-from scripts.FileOperations import *
-from dotenv import load_dotenv
-import rayx, os, subprocess, traceback, io, base64, time, math
-from scripts.Histogram import Histogram
-from scripts.Curve import Curve
-from pathlib import Path
-from scripts.rml import *
-from scripts.Materials import MATERIALS
-import pandas as pd
-import numpy as np
-from werkzeug.utils import secure_filename
 from werkzeug.exceptions import HTTPException
-# endregion
 
 app = Flask(__name__)
 
-# Upload- & Output folder, creates one if it doesn't exist
-# Used to store rml upload and h5 output
-# TODO: Implement user specific folder via Slurm & delete after session termination
-UPLOAD_FOLDER = Path("./uploads/")
-UPLOAD_FOLDER.mkdir(exist_ok=True)
-
-OUTPUT_PATH = Path("./output/")
-OUTPUT_PATH.mkdir(exist_ok=True)
-
-output_file_name = ""
-
-# region Configurations
-try:
-    load_dotenv("config.env")                               # Load environment variables, if does not exist, create one
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")      # Secret Key is used to secure the session and temporarily store user form data     TODO: Find out why this happens again
-except:
-    # TODO: Add correct excpetion handling
-    print("Could not load secret key. Will use default secret key. In order to configure the secret key, create a file called 'config.env' with the following content: SECRET_KEY=some_secret_key.")
-    app.config["SECRET_KEY"] = "1234567890"
-
-app.config["MAX_CONTENT_LENGTH"] = 10 * 1000 * 1000         # Limits rml_file size to 10 MB
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER                 # Folder where rml files are stored during session
-
-ALLOWED_EXTENSIONS = {"rml"}                                # Only allows .rml files to be uploaded
-# endregion
-
-# Runs the app and starts the server, loads landing page
 @app.route("/",)
 def index():
+    """
+    Main route. Renders landing page.
+    """
     return render_template("displayPy.html")
 
 # region Standard Beamline Tracing
@@ -416,86 +379,9 @@ def download_h5():
         mimetype="application/octet-stream"
     )
 
-# Calls RayX as a subprocess and saves the output as a .h5 file in the output folder
-def call_rayx(rml_path, output_file_name) -> None:
-
-        rayx_cmd = ["./rayx/rayx", "-i", rml_path]
-        rayx_cmd += ['-o', str(OUTPUT_PATH) + "/" + output_file_name]
-
-        result = subprocess.run(rayx_cmd, capture_output=True, text=True)
-        
-        if result.stderr:
-            print("STDERR:\n", result.stderr)
-
-        if result.returncode != 0:
-            print("Error occurred while running rayx.")
-            raise Exception(result.stderr) 
-
-def get_beamline(rml_file) -> rayx.Rays:
-    """
-    Takes an RML file and returns a traced beamline using the RayX python package.
-    """
-    try:
-        # Get the absolute path
-        base_dir = os.path.dirname(os.path.realpath(__file__))
-        path = os.path.join(base_dir, "uploads", rml_file.filename)
-
-        # Import the beamline   
-        beamLine = rayx.import_beamline(path)
-        return beamLine
-    except Exception as e:
-        traceback.print_exc()
-        return render_template("displayPy.html", exception=e)
-
-def allowed_file(filename):
-    """
-    Checks if the uploaded file is allowed based on its extension.
-    """
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# region Math
-def get_electric_field_vector(df) -> np.ndarray:
-    if df.empty:
-        return np.zeros(3, dtype=complex)
-    return np.array([
-        df["electric_field_x"].values.mean(),
-        df["electric_field_y"].values.mean(),
-        df["electric_field_z"].values.mean(),
-    ])  # shape (3,), dtype complex
-
-def generate_energy_beamlines(template_path, min_e=30, max_e=1000) -> list:
-    """
-    Generates diffrent beamlines for a range of photon energies based on a template RML file.
-    Sets the energy of each source to the current energy.
-    Returns:
-        A list of beamline objects.
-    """
-
-    # Check if min_e and max_e are valid
-    if min_e >= max_e or max_e <= min_e:
-        print("Invalid energy range")
-        return []
-
-    template_path = template_path
-    beamlines = []
-
-    for energy in range(min_e, max_e + 1):
-        bl = rayx.import_beamline(template_path)
-        bl.sources[0].energy = energy
-        beamlines.append(bl)
-
-    return beamlines
-
-# endregion
-
-def isMaterialAllowed(material) -> bool:
-    return material in MATERIALS
-
 # region Error Handling
-"""
-Below code handles any HTTP errors that occur during the execution of the app (mostly in production mode).
-"""
+# Below code handles any HTTP errors that occur during the execution of the app (mostly in production mode).
+
 @app.errorhandler(HTTPException)
 def handle_exception(e):
     """Return JSON instead of HTML for HTTP errors."""
@@ -510,7 +396,3 @@ def handle_exception(e):
     response.content_type = "application/json"
     return response
 # endregion
-
-# Runs the server
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)

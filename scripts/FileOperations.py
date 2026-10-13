@@ -25,3 +25,10 @@ def get_cleaned_filename(filename):
     Returns the cleaned filename. "_" is replaced with " " and the file extension is removed.
     """
     return filename.replace("_", " ").rsplit('.', 1)[0]
+
+def allowed_file(filename):
+    """
+    Checks if the uploaded file is allowed based on its extension.
+    """
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

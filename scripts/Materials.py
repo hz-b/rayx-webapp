@@ -14,3 +14,6 @@ MATERIALS = {
     "Hg": 13.55, "Tl": 11.85, "Pb": 11.34, "Bi": 9.78, "Po": 9.20, "At": 7.0, "Rn": 0.0097,
     "Fr": 1.87, "Ra": 5.5, "Ac": 10.07, "Th": 11.7, "Pa": 15.4, "U": 19.1
 }
+
+def isMaterialAllowed(material) -> bool:
+    return material in MATERIALS
