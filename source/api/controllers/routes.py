@@ -1,18 +1,18 @@
 from flask import Flask, render_template, request, send_file, redirect, flash, url_for, session, json
 from werkzeug.exceptions import HTTPException
 
-app = Flask(__name__)
+api = Flask(__name__)
 
-@app.route("/",)
+@api.route("/")
 def index():
     """
-    Main route. Renders landing page.
+    Main route.
     """
-    return render_template("displayPy.html")
+    return { "message": "Hello from the RAYX Web Application." }
 
 # region Standard Beamline Tracing
 # Handles the post on the server, displays the content of the rml file on the site
-@app.route("/display/handle_post", methods=["POST"])
+@api.route("/display/handle_post", methods=["POST"])
 def display_handle_post():
     """
     This function handles the post request from the displayPy.html page.
@@ -122,19 +122,7 @@ def display_handle_post():
 
 # region Reflectivity
 
-@app.route("/reflectivity")
-def reflectivity():
-    """
-    This function renders the web page for the "Reflectivity" tool.
-
-    The "Reflectivity" tool is used to visualize the reflectivity of a material at a given angle and energy range.
-
-    Returns:
-        render_template: The rendered web page.
-    """
-    return render_template("reflectivity.html")
-
-@app.route("/reflectivity/handle_post", methods=["POST"])
+@api.route("/reflectivity/handle_post", methods=["POST"])
 def handle_post_reflectivity():
     """
     Takes one **rml file** with **two elements**: A point source that emits *1 ray**, and a mirror.<br>
@@ -353,7 +341,7 @@ def handle_post_reflectivity():
 # endregion
 
 # Handles the post on the server, sends the output .h5 file to the client
-@app.route("/reflectivity/download", methods=["POST"])
+@api.route("/reflectivity/download", methods=["POST"])
 def download_h5():
     # No file upload needed — uses session file
     path = session.get("last_rml_path")
@@ -382,7 +370,7 @@ def download_h5():
 # region Error Handling
 # Below code handles any HTTP errors that occur during the execution of the app (mostly in production mode).
 
-@app.errorhandler(HTTPException)
+@api.errorhandler(HTTPException)
 def handle_exception(e):
     """Return JSON instead of HTML for HTTP errors."""
     # start with the correct headers and status code from the error

@@ -11,12 +11,12 @@
                 <p>Upload an RML file to be traced by RAYX</p>
             </div>
             <div class = "FormContainer">
-                <form action="{{url_for('display_handle_post')}}" method="POST" enctype="multipart/form-data">
+                <form method="POST" enctype="multipart/form-data">
                     <label for="rmlFile" class="fileUpload">Upload RML File</label>
                     <input type="file" id="rmlFile" name="rmlFile" accept=".rml"> 
                     <button type="submit" onclick="showLoadingIndicator()">Send</button>
                 </form>
-                <form action="{{ url_for('download_h5') }}" method="POST" id="downloadForm">
+                <form method="POST" id="downloadForm">
                     <button 
                         type="submit" 
                         id="downloadButton" 
