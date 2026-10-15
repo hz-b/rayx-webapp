@@ -1,5 +1,6 @@
 from flask import Flask
-from source.api.controllers.routes import api, index, display_handle_post, reflectivity, handle_post_reflectivity, download_h5, handle_exception
+from source.api.controllers.api_routes  import api
+import argparse
 from scripts.FileOperations import *
 from dotenv import load_dotenv
 import rayx, os, subprocess, traceback, io, base64, time, math
@@ -11,13 +12,13 @@ from scripts.Materials import MATERIALS
 import pandas as pd
 from werkzeug.utils import secure_filename
 
-def run_api():
+def run_api(port: int = 5000):
     # Pre-Run
     create_environment_folders()
     load_configurations()
 
     # Run API
-    api.run(host="0.0.0.0", port=5000, debug=True)
+    api.run(host="0.0.0.0", port=port, debug=True)
 
 def create_environment_folders():
     """
@@ -48,4 +49,8 @@ def load_configurations():
 
 # Runs the server
 if __name__ == "__main__":
-    run_api()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--Port", help="Port-number.", default=5000)
+    args = parser.parse_args()
+    
+    run_api(args.Port)
