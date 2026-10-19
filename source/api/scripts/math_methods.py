@@ -1,11 +1,18 @@
+import numpy as np
+import rayx
+
+
 def get_electric_field_vector(df) -> np.ndarray:
     if df.empty:
         return np.zeros(3, dtype=complex)
-    return np.array([
-        df["electric_field_x"].values.mean(),
-        df["electric_field_y"].values.mean(),
-        df["electric_field_z"].values.mean(),
-    ])  # shape (3,), dtype complex
+    return np.array(
+        [
+            df["electric_field_x"].values.mean(),
+            df["electric_field_y"].values.mean(),
+            df["electric_field_z"].values.mean(),
+        ]
+    )  # shape (3,), dtype complex
+
 
 def generate_energy_beamlines(template_path, min_e=30, max_e=1000) -> list:
     """

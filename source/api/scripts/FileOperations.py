@@ -1,34 +1,37 @@
 import os
 
+
 def remove_file(savePath, rml_file):
     """
     Removes a file from the server.
     """
 
     path = os.path.join(savePath, rml_file.filename)
-        
+
     try:
         os.remove(path)
-    except:
+    except FileNotFoundError:
         print("File could not be found or removed.")
+
 
 def save_file(savePath, rml_file):
     """
     Saves a file on the server.
     """
-    
+
     path = os.path.join(savePath, rml_file.filename)
     rml_file.save(path)
+
 
 def get_cleaned_filename(filename):
     """
     Returns the cleaned filename. "_" is replaced with " " and the file extension is removed.
     """
-    return filename.replace("_", " ").rsplit('.', 1)[0]
+    return filename.replace("_", " ").rsplit(".", 1)[0]
 
-def allowed_file(filename):
+
+def allowed_file(filename: str, allowed_extensions: list(str)):
     """
     Checks if the uploaded file is allowed based on its extension.
     """
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions

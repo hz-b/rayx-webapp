@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from pathlib import Path
+
 
 def set_value_in_rml(path, param_id, value):
     """
@@ -28,7 +28,9 @@ def set_value_in_rml(path, param_id, value):
         for axis in ("x", "y", "z"):
             child = param.find(axis)
             if child is None:
-                raise RuntimeError(f"Sub-element <{axis}> not found in param '{param_id}'")
+                raise RuntimeError(
+                    f"Sub-element <{axis}> not found in param '{param_id}'"
+                )
             child.text = f"{float(value[axis]):.16f}"
     else:
         # Handle scalar value
@@ -36,6 +38,7 @@ def set_value_in_rml(path, param_id, value):
 
     # save
     tree.write(path, encoding="UTF-8", xml_declaration=True)
+
 
 def print_value_in_rml(path, param_id):
     """

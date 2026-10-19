@@ -1,14 +1,44 @@
-from flask import Flask, render_template, request, send_file, redirect, flash, url_for, session, json
+from flask import (
+    Flask,
+    render_template,
+    request,
+    send_file,
+    redirect,
+    url_for,
+    session,
+    json,
+)
+import os
+import pandas as pd
+import numpy as np
+import traceback
+import math
+from source.api.scripts.FileOperations import (
+    get_cleaned_filename,
+    allowed_file,
+    save_file,
+)
 from werkzeug.exceptions import HTTPException
+from source.api.scripts.Materials import MATERIALS, isMaterialAllowed
+from source.api.scripts.rml import set_value_in_rml
+from source.api.scripts.rayx_operations import get_beamline, call_rayx
+from source.api.scripts.math_methods import (
+    generate_energy_beamlines,
+    get_electric_field_vector,
+)
+from source.api.scripts.Histogram import Histogram
+from source.api.scripts.Curve import Curve
 
 api = Flask(__name__)
+
 
 @api.route("/")
 def index():
     """
     Main route.
     """
-    return { "message": "Hello from the RAYX Web Application." }
+    return {"message": "Hello from the RAYX Web Application."}
+
 
 # region Standard Beamline Tracing
 # Handles the post on the server, displays the content of the rml file on the site
@@ -16,18 +46,17 @@ def index():
 def display_handle_post():
     """
     This function handles the post request from the displayPy.html page.
-    
+
     It receives an rml file from the user, traces the beamline,
     and then plots the beamline distribution in a series of 2D histograms.
-    
+
     Returns:
         render_template: The rendered web page.
     """
-    
+
     plot_data = []
 
     if request.method == "POST":
-        
         # region POST Handling
         # Check if the post request has the file part
         if "rmlFile" not in request.files:
@@ -37,17 +66,22 @@ def display_handle_post():
 
         # If the user does not select a file, the browser submits an
         # empty file without a filename. Page reloads, no file is uploaded.
-        if rml_file.filename == '':
+        if rml_file.filename == "":
             return render_template("displayPy.html")
-        
+
         # Check if file is allowed and save it, if it is
-        if rml_file and allowed_file(rml_file.filename):
-            filename = secure_filename(rml_file.filename)
+        if rml_file and allowed_file(
+            rml_file.filename, api.config["ALLOWED_EXTENSIONS"]
+        ):
+            filename = (
+                rml_file.filename
+            )  # secure_filename(rml_file.filename) TODO: Method not found
             rml_file.filename = filename
-            save_file(UPLOAD_FOLDER, rml_file)
-            
+            upload_folder = api.config["UPLOAD_FOLDER"]
+            save_file(upload_folder, rml_file)
+
             session["last_rml_filename"] = filename
-            path = os.path.join(UPLOAD_FOLDER, filename)
+            path = os.path.join(upload_folder, filename)
             session["last_rml_path"] = path
         else:
             return render_template("displayPy.html")
@@ -55,7 +89,7 @@ def display_handle_post():
         output_file_name = rml_file.filename
 
         # endregion
-        
+
         try:
             # Trace beamline
             beamline = get_beamline(rml_file)
@@ -63,12 +97,22 @@ def display_handle_post():
 
             # Create pandas dataframe
             columns = [
-                "direction_x", "direction_y", "direction_z",
-                "electric_field_x", "electric_field_y", "electric_field_z",
-                "energy", "event_type",
-                "last_element_id", "order", "path_length",
-                "position_x", "position_y", "position_z",
-                "ray_id", "source_id",
+                "direction_x",
+                "direction_y",
+                "direction_z",
+                "electric_field_x",
+                "electric_field_y",
+                "electric_field_z",
+                "energy",
+                "event_type",
+                "last_element_id",
+                "order",
+                "path_length",
+                "position_x",
+                "position_y",
+                "position_z",
+                "ray_id",
+                "source_id",
             ]
 
             df = pd.DataFrame({col: getattr(traced_beamline, col) for col in columns})
@@ -87,14 +131,22 @@ def display_handle_post():
             # Creates an array that holds all of the beamlines elements as a 2D histogram
             for source in range(len(beamline.sources)):
                 mask = last_element == source
-                plot = Histogram(pos_x[mask], pos_y[mask], xLabel="x / mm", yLabel="y / mm", title=(beamline.sources[source].name))
-                
+                plot = Histogram(
+                    pos_x[mask],
+                    pos_y[mask],
+                    xLabel="x / mm",
+                    yLabel="y / mm",
+                    title=(beamline.sources[source].name),
+                )
+
                 plot_data.append(plot)
 
             # If the beamline has only one element, plot the whole beamline, prevents the histogram from being empty
             if len(beamline.elements) <= 1:
-                plot = Histogram(pos_x, pos_z, xLabel="x / mm", yLabel="z / mm", title="")
-                
+                plot = Histogram(
+                    pos_x, pos_z, xLabel="x / mm", yLabel="z / mm", title=""
+                )
+
                 plot_data.append(plot)
             else:
                 index = 1
@@ -102,39 +154,46 @@ def display_handle_post():
                     for element in range(len(beamline.elements)):
                         mask = last_element == element + len(beamline.sources)
 
-                        plot = Histogram(pos_x[mask], pos_z[mask], xLabel="x / mm", yLabel="z / mm", title=(beamline.elements[element].name))
+                        plot = Histogram(
+                            pos_x[mask],
+                            pos_z[mask],
+                            xLabel="x / mm",
+                            yLabel="z / mm",
+                            title=(beamline.elements[element].name),
+                        )
 
                         plot_data.append(plot)
-                except:
+                except ValueError:
                     print("Index out of range" + str(index))
                     pass
         except Exception as e:
             traceback.print_exc()
             return render_template("displayPy.html", exception=e)
-      
+
     return render_template(
-        "displayPy.html", 
-        RMLFileName=get_cleaned_filename(output_file_name), 
+        "displayPy.html",
+        RMLFileName=get_cleaned_filename(output_file_name),
         plot_data=plot_data,
     )
+
 
 # endregion
 
 # region Reflectivity
+
 
 @api.route("/reflectivity/handle_post", methods=["POST"])
 def handle_post_reflectivity():
     """
     Takes one **rml file** with **two elements**: A point source that emits *1 ray**, and a mirror.<br>
     The function takes the rml file, applies user settings generates a beamline x-times so that the **Photon Energy (eV) ranges from 0 to 1000 eV**.<br>
-    Then for each beamline, the function traces it and then calculates the **electric field** strength for the source and the mirror. 
-    It calculates the reflectivity by **dividing the electric field strength of the mirror by that of the source** and plots them in a curve.<br> 
-    The x-axis is the photon energy (eV) and the y-axis is the reflectivity.<br> 
-    The curve is then plotted on the website. 
+    Then for each beamline, the function traces it and then calculates the **electric field** strength for the source and the mirror.
+    It calculates the reflectivity by **dividing the electric field strength of the mirror by that of the source** and plots them in a curve.<br>
+    The x-axis is the photon energy (eV) and the y-axis is the reflectivity.<br>
+    The curve is then plotted on the website.
     """
 
     if request.method == "POST":
-
         # Create a list of all the beamlines
         beamlines = []
 
@@ -144,7 +203,7 @@ def handle_post_reflectivity():
         outgoing_efields = []
 
         plot_data = ""
-    
+
         # region RML-File Handling
 
         # Get the absolute path of the rml-file
@@ -158,17 +217,17 @@ def handle_post_reflectivity():
         # Change and store params depending on POST request
         angle = float(request.form["angle"])
         material = request.form.get("material", type=str)
-        
+
         # Flag for illegal materials
-        if material == "" or isMaterialAllowed(material) == False:
+        if material == "" or not isMaterialAllowed(material):
             return render_template("reflectivity.html")
-        
+
         density = float(request.form["density"])
 
         # If density is -1, set it to the default density
         if density < 0:
             density = MATERIALS[material]
-        
+
         roughness = float(request.form["roughness"])
 
         # Convert angle to radians
@@ -196,9 +255,7 @@ def handle_post_reflectivity():
         set_value_in_rml(path, "circularPol", circularPol)
 
         beamlines = generate_energy_beamlines(
-            path, 
-            min_e=int(request.form["min_e"]), 
-            max_e=int(request.form["max_e"])
+            path, min_e=int(request.form["min_e"]), max_e=int(request.form["max_e"])
         )
         # endregion
 
@@ -209,23 +266,34 @@ def handle_post_reflectivity():
         # region Beamline Tracing
         # Loop through the generated beamlines and trace each
         for beamline in beamlines:
-            
             try:
-                # Trace beamline using RAYX depending on the index    
+                # Trace beamline using RAYX depending on the index
                 # beamline = beamlines[beamlines.index(beamline)]
                 traced_beamline = beamline.trace()
 
                 # Create a pandas dataframe for the traced beamline
                 columns = [
-                    "direction_x", "direction_y", "direction_z",
-                    "electric_field_x", "electric_field_y", "electric_field_z",
-                    "energy", "event_type",
-                    "last_element_id", "order", "path_length",
-                    "position_x", "position_y", "position_z",
-                    "ray_id", "source_id",
+                    "direction_x",
+                    "direction_y",
+                    "direction_z",
+                    "electric_field_x",
+                    "electric_field_y",
+                    "electric_field_z",
+                    "energy",
+                    "event_type",
+                    "last_element_id",
+                    "order",
+                    "path_length",
+                    "position_x",
+                    "position_y",
+                    "position_z",
+                    "ray_id",
+                    "source_id",
                 ]
 
-                df = pd.DataFrame({col: getattr(traced_beamline, col) for col in columns})
+                df = pd.DataFrame(
+                    {col: getattr(traced_beamline, col) for col in columns}
+                )
 
                 last_element = df["last_element_id"]
 
@@ -237,48 +305,64 @@ def handle_post_reflectivity():
                 # Get Ein
                 for source in range(len(beamline.sources)):
                     mask = last_element == source
-                    Ein = get_electric_field_vector(df[mask])          # Ein: complex [Ex,Ey,Ez]
+                    Ein = get_electric_field_vector(df[mask])  # Ein: complex [Ex,Ey,Ez]
                     print("=" * 50)
                     print("EIN: ", Ein)
                     electric_field_source = Ein
                     incoming_rays.append(float(np.real(np.vdot(Ein, Ein))))
-                    incoming_efields.append({
-                        "ex": complex(Ein[0]),
-                        "ey": complex(Ein[1]),
-                        "ez": complex(Ein[2]),
-                    })
+                    incoming_efields.append(
+                        {
+                            "ex": complex(Ein[0]),
+                            "ey": complex(Ein[1]),
+                            "ez": complex(Ein[2]),
+                        }
+                    )
 
                 # Get Eout
                 if len(beamline.elements) < 1:
                     print("No elements in beamline")
                 else:
                     mask = last_element == len(beamline.sources)
-                    Eout = get_electric_field_vector(df[mask])         # Eout: complex [Ex,Ey,Ez]
+                    Eout = get_electric_field_vector(
+                        df[mask]
+                    )  # Eout: complex [Ex,Ey,Ez]
                     print("EOUT: ", Eout)
                     electric_field_mirror = Eout
                     outgoing.append(float(np.real(np.vdot(Eout, Eout))))
-                    outgoing_efields.append({
-                        "ex": complex(Eout[0]),
-                        "ey": complex(Eout[1]),
-                        "ez": complex(Eout[2]),
-                    })
+                    outgoing_efields.append(
+                        {
+                            "ex": complex(Eout[0]),
+                            "ey": complex(Eout[1]),
+                            "ez": complex(Eout[2]),
+                        }
+                    )
 
                 # Supervisor's formula
-                Ein_intensity = np.real(np.vdot(electric_field_source, electric_field_source))
-                Eout_intensity = np.real(np.vdot(electric_field_mirror, electric_field_mirror))
-                reflectivity = float(Eout_intensity / Ein_intensity) if Ein_intensity != 0 else 0.0
-                print("R:", Eout_intensity, "/" , Ein_intensity, "=", reflectivity)
+                Ein_intensity = np.real(
+                    np.vdot(electric_field_source, electric_field_source)
+                )
+                Eout_intensity = np.real(
+                    np.vdot(electric_field_mirror, electric_field_mirror)
+                )
+                reflectivity = (
+                    float(Eout_intensity / Ein_intensity) if Ein_intensity != 0 else 0.0
+                )
+                print("R:", Eout_intensity, "/", Ein_intensity, "=", reflectivity)
 
                 # Add the electric field strength and reflectivity to the dataframe
                 electric_fields = pd.concat(
                     [
                         electric_fields,
-                        pd.DataFrame([{
-                            "eV": beamline.sources[0].energy,
-                            "reflectivity": reflectivity
-                        }])
+                        pd.DataFrame(
+                            [
+                                {
+                                    "eV": beamline.sources[0].energy,
+                                    "reflectivity": reflectivity,
+                                }
+                            ]
+                        ),
                     ],
-                    ignore_index=True
+                    ignore_index=True,
                 )
                 # endregion
 
@@ -298,7 +382,7 @@ def handle_post_reflectivity():
             except Exception as e:
                 traceback.print_exc()
                 return render_template("displayPy.html", exception=e)
-    
+
     electric_fields = electric_fields.sort_values("eV")
     # endregion
 
@@ -314,18 +398,18 @@ def handle_post_reflectivity():
             incoming=incoming_rays,
             outgoing=outgoing,
             incoming_efields=incoming_efields,
-            outgoing_efields=outgoing_efields
+            outgoing_efields=outgoing_efields,
         ).GetPlotHTML()
-    except Exception as e:
+    except Exception:
         # If plotting fails, print the error and return an empty plot.
         traceback.print_exc()
         plot_data = ""
 
     # endregion
-    
+
     return render_template(
-        "reflectivity.html", 
-        RMLFileName=None, 
+        "reflectivity.html",
+        RMLFileName=None,
         plot_data=plot_data,
         min_e=request.form.get("min_e", 30),
         max_e=request.form.get("max_e", 100),
@@ -335,10 +419,12 @@ def handle_post_reflectivity():
         material=request.form.get("material", "Si"),
         linearPol_0=request.form.get("linearPol_0", 0),
         linearPol_45=request.form.get("linearPol_45", 0),
-        circularPol=request.form.get("circularPol", 0)
+        circularPol=request.form.get("circularPol", 0),
     )
 
+
 # endregion
+
 
 # Handles the post on the server, sends the output .h5 file to the client
 @api.route("/reflectivity/download", methods=["POST"])
@@ -352,11 +438,11 @@ def download_h5():
         return redirect(url_for("reflectivity"))
 
     output_file_name = os.path.splitext(filename)[0] + ".h5"
-    output_path = str(OUTPUT_PATH) + "/" + output_file_name
+    output_path = str(api.config["OUTPUT_PATH"]) + "/" + output_file_name
 
     try:
-        call_rayx(path, output_file_name)
-    except Exception as e:
+        call_rayx(path, output_file_name, api.config["OUTPUT_PATH"])
+    except Exception:
         traceback.print_exc()
         return "RAY-X failed", 500
 
@@ -364,11 +450,13 @@ def download_h5():
         output_path,
         as_attachment=True,
         download_name=output_file_name,
-        mimetype="application/octet-stream"
+        mimetype="application/octet-stream",
     )
+
 
 # region Error Handling
 # Below code handles any HTTP errors that occur during the execution of the app (mostly in production mode).
+
 
 @api.errorhandler(HTTPException)
 def handle_exception(e):
@@ -376,11 +464,15 @@ def handle_exception(e):
     # start with the correct headers and status code from the error
     response = e.get_response()
     # replace the body with JSON
-    response.data = json.dumps({
-        "code": e.code,
-        "name": e.name,
-        "description": e.description,
-    })
+    response.data = json.dumps(
+        {
+            "code": e.code,
+            "name": e.name,
+            "description": e.description,
+        }
+    )
     response.content_type = "application/json"
     return response
+
+
 # endregion

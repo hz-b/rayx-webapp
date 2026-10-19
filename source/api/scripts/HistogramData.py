@@ -28,7 +28,9 @@ class HistogramData:
 
         # safety check
         if len(indices_above_half) < 2:
-            raise ValueError("Not enough data above half maximum to compute FWHM in HistogramData.py")
+            raise ValueError(
+                "Not enough data above half maximum to compute FWHM in HistogramData.py"
+            )
 
         left_index = indices_above_half[0]
         right_index = indices_above_half[-1]
@@ -42,7 +44,7 @@ class HistogramData:
                 counts[left_index],
                 bin_centers[left_index - 1],
                 bin_centers[left_index],
-                half_max
+                half_max,
             )
 
         # right interpolation (guard against index overflow)
@@ -54,7 +56,7 @@ class HistogramData:
                 counts[right_index + 1],
                 bin_centers[right_index],
                 bin_centers[right_index + 1],
-                half_max
+                half_max,
             )
 
         return self.info["x2"] - self.info["x1"]
@@ -81,25 +83,24 @@ class HistogramData:
             if half_area < np.sum(counts[:i]):
                 x_left = bin_edges[i]
                 break
-        
+
         centerOfMass = (x_right + x_left) / 2
 
         return centerOfMass
 
     def __init__(self, data):
-
         self.data = list(data)
-        
+
         self.info = {
-            "fwhm": 0.0,            # Full Width at Half Maximum
-            "x1": 0.0,              # FWHM x1           (x1, y)---------(x2, y)
-            "x2": 0.0,              # FWHM x2               |              |
-            "y": 0.0,               # FWHM y            (x1, 0)         (x2, 0)
-            "centerOfMass": 0.0     # Center of Mass
+            "fwhm": 0.0,  # Full Width at Half Maximum
+            "x1": 0.0,  # FWHM x1           (x1, y)---------(x2, y)
+            "x2": 0.0,  # FWHM x2               |              |
+            "y": 0.0,  # FWHM y            (x1, 0)         (x2, 0)
+            "centerOfMass": 0.0,  # Center of Mass
         }
-        
+
         try:
             self.info["fwhm"] = self.GetFWHM(self.data)
-            self.info["centerOfMass"] = self.GetCenterOfMass(self.data)      
+            self.info["centerOfMass"] = self.GetCenterOfMass(self.data)
         except ValueError as e:
             print("Error calculating FWHM:", e)

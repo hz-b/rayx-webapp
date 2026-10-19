@@ -2,12 +2,14 @@ from flask import Flask, render_template
 
 app = Flask(__name__)
 
+
 @app.route("/")
 def index():
     """
     Main route. Renders landing page.
     """
     return render_template("displayPy.html")
+
 
 @app.route("/reflectivity")
 def reflectivity():
