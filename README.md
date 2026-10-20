@@ -35,13 +35,20 @@ The app allows users to upload an `.rml` file, trace the beamline using the RAYX
 Use the main branch for the most stable version.
 
 ### 2. Installing dependencies using uv
-From the project root run: <br>
-`uv venv` <br>
-`uv sync`
-
+From the project root run:
+```
+uv venv
+uv sync
+```
 This will:
 * Create a virtual environment
 * Install all dependencies defined by the project
+
+#### 2.1 *Optional for developers*
+Initialize pre-commits:
+```
+pre-commit
+```
 
 ### 3. Create a 'config.env' file
 The server uses sessions to temporarily store the users submitted rml-files. Therefore, you need to create a `config.env` file in the **root directory** containing the following content:
