@@ -47,7 +47,8 @@ This will:
 #### 2.1 *Optional for developers*
 Initialize pre-commits:
 ```
-pre-commit
+source .venv/bin/activate
+pre-commit install
 ```
 
 ### 3. Create a 'config.env' file
