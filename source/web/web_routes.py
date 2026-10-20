@@ -22,3 +22,11 @@ def reflectivity():
         render_template: The rendered web page.
     """
     return render_template("reflectivity.html")
+
+@app.route("/handle_post_reflectivity")
+def handle_post_reflectivity():
+    return NotImplementedError
+
+@app.route("/download_h5")
+def download_h5():
+    return NotImplementedError

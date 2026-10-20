@@ -30,7 +30,7 @@ def get_cleaned_filename(filename):
     return filename.replace("_", " ").rsplit(".", 1)[0]
 
 
-def allowed_file(filename: str, allowed_extensions: list(str)):
+def allowed_file(filename: str, allowed_extensions: list):
     """
     Checks if the uploaded file is allowed based on its extension.
     """

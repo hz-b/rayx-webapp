@@ -49,7 +49,7 @@ def load_configurations():
 # Runs the server
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--Port", help="Port-number.", default=5000)
+    parser.add_argument("-p", "--Port", help="Port-number.", default=5001)
     args = parser.parse_args()
 
     run_api(args.Port)
