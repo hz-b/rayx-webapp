@@ -42,13 +42,13 @@
     :global(h5),
     :global(h6) {
         font-size: inherit;
-		color: var(--color-text-on-black)
+		color: var(--color-text-on-black);
+		margin: 0;
     }
 
 	:global(h1){
 		font-size: 2.5rem;
 		font-weight: bold;
-		margin: 0;
 	}
 
     :global(h2) {
@@ -73,6 +73,7 @@
         font: inherit;
 		color: var(--color-text-on-black);
 		font-size: var(--average-text-size);
+		margin: 0;
     }
 
     /* Links: no decoration, inherit color */
