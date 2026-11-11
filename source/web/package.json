@@ -23,5 +23,9 @@
 		"svelte-check": "^4.6.0",
 		"typescript": "^6.0.3",
 		"vite": "^8.3.0"
+	},
+	"dependencies": {
+		"@lucide/svelte": "^1.72.0",
+		"svelte-tweakpane-ui": "^1.6.3"
 	}
 }
