@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { PanelLeftClose, PanelLeftOpen } from '@lucide/svelte';
     import type { Snippet } from 'svelte';
 
     let {
@@ -21,7 +22,7 @@
 <div
     class="window-slot"
     class:collapsed={isCollapsed}
-    style:--window-width={`${width}%`}
+    style:--window-width={width}
 >
     <section class="pane" aria-label={title}>
         <header>
@@ -35,21 +36,11 @@
                     aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${title}`}
                     title={`${isCollapsed ? 'Expand' : 'Collapse'} ${title}`}
                 >
-                    <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        aria-hidden="true"
-                    >
-                        <path
-                            d={isCollapsed
-                                ? 'M9 6l6 6-6 6'
-                                : 'M15 6l-6 6 6 6'}
-                        />
-                    </svg>
+                    {#if isCollapsed}
+                        <PanelLeftOpen />
+                    {:else}
+                        <PanelLeftClose />
+                    {/if}
                 </button>
             {/if}
         </header>
@@ -64,11 +55,16 @@
 
 <style>
     .window-slot {
+        /* Width is a proportion: for example, 30:70. */
         flex: var(--window-width) 1 0;
         min-width: 0;
         margin: 0.3rem;
         display: flex;
         justify-content: flex-start;
+    }
+
+    .window-slot.collapsed {
+        flex: 0 0 3rem;
     }
 
     .pane {
@@ -77,19 +73,17 @@
         min-width: 0;
         min-height: 0;
         padding: 1rem;
-        border-radius: 10px;
+        border-radius: 0.625rem;
         background: var(--color-backdrop);
         box-shadow:
-            0 4px 8px rgba(0, 0, 0, 0.2),
-            0 6px 20px rgba(0, 0, 0, 0.19);
+            0 0.25rem 0.5rem rgb(0 0 0 / 20%),
+            0 0.375rem 1.25rem rgb(0 0 0 / 19%);
         display: flex;
         flex-direction: column;
-        transition: width 200ms ease, padding 200ms ease;
     }
 
     .collapsed .pane {
-        width: 48px;
-        padding: 6px;
+        padding: 0.375rem;
     }
 
     header {
@@ -120,7 +114,7 @@
         place-items: center;
         padding: 0;
         border: none;
-        border-radius: 6px;
+        border-radius: 0.375rem;
         background: transparent;
         color: var(--color-text-on-white);
         cursor: pointer;
@@ -131,14 +125,20 @@
     }
 
     button:focus-visible {
-        outline: 2px solid currentColor;
-        outline-offset: 2px;
+        outline: 0.125rem solid currentColor;
+        outline-offset: 0.125rem;
+    }
+
+    svg {
+        width: 1.25rem;
+        height: 1.25rem;
     }
 
     hr {
         width: 100%;
         box-sizing: border-box;
-        border-color: white;
+        border: 0;
+        border-top: 0.0625rem solid gray;
         margin: 0.75rem 0;
     }
 
@@ -154,11 +154,5 @@
 
     .content-container :global(p) {
         color: var(--color-text-on-white);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .pane {
-            transition: none;
-        }
     }
 </style>

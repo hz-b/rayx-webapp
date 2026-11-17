@@ -121,7 +121,7 @@
         labelForegroundColor: '#475569',
 
         // Inputs
-        inputBackgroundColor: "transparent",
+        inputBackgroundColor: HZBColorThemeLight.input_field_color,
         inputBackgroundColorHover: HZBColorThemeLight.input_field_hover,
         inputBackgroundColorFocus: HZBColorThemeLight.input_field_focus,
         inputBackgroundColorActive: HZBColorThemeLight.input_field_focus,
@@ -176,14 +176,14 @@
             step={0.01}
         />
         <Stepper
-            label="linearPol_0"
+            label="LinearPol_0"
             bind:value={mirror.linearPol_0}
             min={-1}
             max={1}
             step={0.01}
         />
         <Stepper
-            label="linearPol_45"
+            label="LinearPol_45"
             bind:value={mirror.linearPol_45}
             min={-1}
             max={1}
