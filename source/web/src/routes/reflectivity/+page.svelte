@@ -14,6 +14,7 @@
           min={0}
           max={100}
             format={(v) => `${v.toFixed(0)}%`}
+		label="test"
         />
     </ContentWindow>
     <ContentWindow title="Graph Viewer" width={70}>

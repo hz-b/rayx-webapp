@@ -35,7 +35,7 @@
     }
 
     hr {
-        background: gray;
+        border-color: white;
     }
 
     :global(p) {
