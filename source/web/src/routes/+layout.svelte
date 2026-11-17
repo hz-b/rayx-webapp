@@ -11,6 +11,7 @@
 
 <style>
 	:root {
+		/* HZB-Color Theme - Light*/
 		--color-third-option: #172940;
 		--color-primary: #08477B;			/* HZB-Blue */
 		--color-secondary: #0F82E1;
@@ -18,10 +19,15 @@
 		--color-text-on-black: #fff;
 		--color-text-on-white: #000;
 		--color-label-backdrop: #333;
+		--color-label-backdrop-hover: #616161;
+		--color-input-field-color: #DBDBDB;
+		--color-input-field-hover: #F7F7F7;
+		--color-input-field-focus: #fff;
 		--defect: #defec8;
 
 		/* Text */
 		--average-text-size: 1rem;
+		--average-settings-label-size: 1.2rem;
 	}
 
     :global(body) {

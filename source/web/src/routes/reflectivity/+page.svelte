@@ -1,24 +1,16 @@
 <script lang="ts">
     import ContentWindow from "#lib/components/ContentWindow.svelte";
     import Header from "#lib/components/Header.svelte";
-    import { IntervalSlider } from "svelte-tweakpane-ui";
-
-    let value: [number, number] = [25, 75]
+    import ReflectivityTraceSettings from "#lib/components/ReflectivityTraceSettings.svelte";
 </script>
 
 <Header/>
 <main>
-    <ContentWindow title="Settings" width={30}>
-        <IntervalSlider
-          bind:value
-          min={0}
-          max={100}
-            format={(v) => `${v.toFixed(0)}%`}
-		label="test"
-        />
+    <ContentWindow title="Settings" width={30} expandable>
+        <ReflectivityTraceSettings endpoint="/api/trace" />
     </ContentWindow>
     <ContentWindow title="Graph Viewer" width={70}>
-        <p>test</p>
+        <p>Graph will be displayed here.</p>
     </ContentWindow>
 </main>
 
