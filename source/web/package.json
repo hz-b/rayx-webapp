@@ -19,6 +19,7 @@
 		"@sveltejs/adapter-auto": "^8.0.0",
 		"@sveltejs/kit": "^3.0.0",
 		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@types/plotly.js": "^3.0.15",
 		"svelte": "^5.57.2",
 		"svelte-check": "^4.6.0",
 		"typescript": "^6.0.3",
@@ -26,6 +27,7 @@
 	},
 	"dependencies": {
 		"@lucide/svelte": "^1.72.0",
+		"plotly.js-dist-min": "^4.3.0",
 		"svelte-tweakpane-ui": "^1.6.3"
 	}
 }

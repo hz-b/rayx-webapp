@@ -2,6 +2,7 @@
     import ContentWindow from "#lib/components/ContentWindow.svelte";
     import Header from "#lib/components/Header.svelte";
     import ReflectivityTraceSettings from "#lib/components/ReflectivityTraceSettings.svelte";
+    import ReflectivityGraph from "#lib/components/ReflectivityGraph.svelte";
 </script>
 
 <Header/>
@@ -10,7 +11,7 @@
         <ReflectivityTraceSettings endpoint="/api/trace" />
     </ContentWindow>
     <ContentWindow title="Graph Viewer" width={70}>
-        <p>Graph will be displayed here.</p>
+        <ReflectivityGraph />
     </ContentWindow>
 </main>
 
