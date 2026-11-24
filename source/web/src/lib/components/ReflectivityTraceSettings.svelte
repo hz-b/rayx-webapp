@@ -1,3 +1,8 @@
+<!--
+@component
+Displays the main settings for the reflectivity curve.
+-->
+
 <script lang="ts">
     import Pane from 'svelte-tweakpane-ui/Pane.svelte';
     import IntervalSlider from 'svelte-tweakpane-ui/IntervalSlider.svelte';
@@ -14,7 +19,7 @@
 
     let mirror = $state({
         angle: 0,
-        material: '',
+        material: 'Au',
         density: -1,
         roughness: 1,
         linearPol_0: 0,

@@ -82,10 +82,6 @@
         flex-direction: column;
     }
 
-    .collapsed .pane {
-        padding: 0.375rem;
-    }
-
     header {
         display: flex;
         align-items: center;
