@@ -8,7 +8,7 @@
 <Header/>
 <main>
     <ContentWindow title="Settings" width={30} expandable>
-        <ReflectivityTraceSettings endpoint="http://localhost:5001/api/trace" />
+        <ReflectivityTraceSettings endpoint="http://localhost:8000/api/reflectivity" />
     </ContentWindow>
     <ContentWindow title="Graph Viewer" width={70}>
         <ReflectivityGraph />
