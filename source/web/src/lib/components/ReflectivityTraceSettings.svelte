@@ -30,6 +30,7 @@
         return Number.isFinite(value) && value >= min && value <= max;
     }
 
+    /// Send data to server to be traced
     async function trace() {
         if (sending) return;
 
@@ -54,20 +55,17 @@
         }
 
         const payload = {
-            graph: {
-                energy_eV: {
-                    from: energy[0],
-                    to: energy[1]
-                }
+            graphSettings: {
+                eV: energy, // == [energy[0], energy[1]]
             },
-            mirror: {
-                angle_deg: mirror.angle,
+            mirrorSettings: {
+                angle: mirror.angle,
                 material: mirror.material.trim(),
                 density: mirror.density,
                 roughness: mirror.roughness,
                 linearPol_0: mirror.linearPol_0,
                 linearPol_45: mirror.linearPol_45,
-                CircularPol: mirror.CircularPol
+                circularPol: mirror.CircularPol
             }
         };
 
