@@ -42,7 +42,7 @@ Graph used to display a traced reflectivity curve.
         const selectedMaterial = material;
         const selectedDensity = density;
         const selectedAngle = angle;
-        if (!graph || !plotElement || x.length !== y.length) return;
+        if (!graph || !plotElement || !x || !y || x.length === 0 || x.length !== y.length) return;
 
         // Construct Plot
         const trace = [{
@@ -83,7 +83,8 @@ Graph used to display a traced reflectivity curve.
     });
 </script>
 
-{#if dataX != null}
+<!-- Display Placeholder if graph empty -->
+{#if dataX != null && dataX.length > 0 && dataY != null && dataX.length === dataY.length}
     <div class="reflectivity-plot" bind:this={plotElement} aria-label="Reflectivity by photon energy"></div>
 {:else}
     <div class="Placeholder" >

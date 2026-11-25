@@ -13,7 +13,21 @@ Displays the main settings for the reflectivity curve.
     import {type Theme } from 'svelte-tweakpane-ui';
     import { HZBColorThemeLight } from './Colors';
 
-    let { endpoint = '/api/trace' }: { endpoint?: string } = $props();
+    type TraceResult = {
+        dataX: number[];
+        dataY: number[];
+        material: string;
+        density: number;
+        angle: number;
+    };
+
+    let {
+        endpoint = '/api/trace',
+        onTrace
+    }: {
+        endpoint?: string;
+        onTrace?: (result: TraceResult) => void;
+    } = $props();
 
     let energy = $state<[number, number]>([20, 100]);
 
@@ -89,7 +103,9 @@ Displays the main settings for the reflectivity curve.
                 throw new Error(`Trace request failed (HTTP ${response.status}).`);
             }
 
-            message = 'Trace request accepted.';
+            const result = (await response.json()) as TraceResult;
+            onTrace?.(result);
+            message = 'Trace complete.';
         } catch (error) {
             failed = true;
             message =

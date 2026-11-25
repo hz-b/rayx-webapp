@@ -6,11 +6,12 @@ Run from the repository root with:
 
 from math import cos, exp, pi, sin
 
-import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Annotated
+
+app = FastAPI(title="Dummy RAYX API")
 
 EnergyEV = Annotated[float, Field(ge=0, le=1000)]
 
@@ -43,8 +44,6 @@ class TraceResponse(BaseModel):
     angle: float
 
 
-app = FastAPI(title="Dummy RAYX API")
-
 # The frontend dev server runs on a separate port. Keep this permissive for
 # local development; narrow the allowed origins if this server is deployed.
 app.add_middleware(
@@ -72,14 +71,9 @@ def trace(request: TraceRequest) -> TraceResponse:
     """Return a deterministic mock reflectivity curve for the submitted settings."""
     energy_start, energy_end = request.graphSettings.eV
     if energy_start > energy_end:
-        # Match the frontend's inclusive range behavior while returning a clear
-        # validation error from the API for invalid direct requests.
-        from fastapi import HTTPException
-
         raise HTTPException(
             status_code=422, detail="Energy range start must not exceed end."
         )
-
     sample_count = 101
     if energy_start == energy_end:
         data_x = [energy_start]
@@ -112,7 +106,3 @@ def trace(request: TraceRequest) -> TraceResponse:
         density=request.mirrorSettings.density,
         angle=request.mirrorSettings.angle,
     )
-
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)

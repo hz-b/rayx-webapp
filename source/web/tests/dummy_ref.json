@@ -1,0 +1,14 @@
+{
+    "graphSettings": {
+        "eV": [20, 100]
+    },
+    "mirrorSettings": {
+        "angle": 5.0,
+        "material": "Au",
+        "density": -1.0,
+        "roughness": 0.0,
+        "linearPol_0": 1.0,
+        "linearPol_45": 0.0,
+        "circularPol": 0.0
+    }
+}
